@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Família Conecta</title>
+<meta name="theme-color" content="#0F6E56">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg: #FFF8F1;
+    --bg-chat: #FFFBF6;
+    --surface: #FFFFFF;
+    --teal: #0F6E56;
+    --teal-light: #E1F5EE;
+    --teal-dark: #085041;
+    --coral: #D85A30;
+    --coral-light: #FAECE7;
+    --amber: #BA7517;
+    --amber-light: #FAEEDA;
+    --text: #2C2C2A;
+    --text-soft: #5F5E5A;
+    --text-hint: #888780;
+    --border: rgba(44,44,42,0.08);
+    --bubble-mine: #0F6E56;
+    --bubble-mine-text: #E1F5EE;
+    --bubble-other: #FFFFFF;
+    --shadow: 0 2px 10px rgba(44,44,42,0.06);
+    --radius: 18px;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--bg);
+    font-family:'Nunito', sans-serif;
+    color:var(--text);
+    overscroll-behavior:none;
+  }
+
+  body{
+    display:flex;
+    justify-content:center;
+  }
+
+  #app{
+    width:100%;
+    max-width:480px;
+    height:100vh;
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    background:var(--bg-chat);
+  }
+
+  .display-font{
+    font-family:'Fredoka', sans-serif;
+  }
+
+  /* ===== Loading ===== */
+  #loading-screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:var(--bg);
+    z-index:999;
+    gap:14px;
+  }
+  #loading-screen .emoji-spin{
+    font-size:48px;
+    animation:spin 1.4s ease-in-out infinite;
+  }
+  @keyframes spin{
+    0%,100%{transform:rotate(-8deg) scale(1);}
+    50%{transform:rotate(8deg) scale(1.08);}
+  }
+  #loading-screen p{
+    color:var(--text-soft);
+    font-size:14px;
+  }
+
+  /* ===== Screens ===== */
+  .screen{
+    position:absolute; inset:0;
+    display:none;
+    flex-direction:column;
+    background:var(--bg-chat);
+  }
+  .screen.active{display:flex;}
+
+  /* ===== Login screen ===== */
+  #screen-login{
+    background:var(--teal);
+    align-items:center;
+    justify-content:center;
+    padding:32px 24px;
+    overflow-y:auto;
+  }
+  #screen-login .login-box{
+    width:100%;
+    max-width:360px;
+  }
+  #screen-login .hero-emoji{
+    font-size:56px;
+    text-align:center;
+    margin-bottom:6px;
+    display:block;
+  }
+  #screen-login h1{
+    color:#FFFFFF;
+    text-align:center;
+    font-size:26px;
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  #screen-login .subtitle{
+    color:rgba(255,255,255,0.75);
+    text-align:center;
+    font-size:14px;
+    margin:0 0 28px;
+  }
+  .person-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+    margin-bottom:24px;
+  }
+  .person-card{
+    background:rgba(255,255,255,0.12);
+    border:2px solid transparent;
+    border-radius:16px;
+    padding:14px 6px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+    transition:transform .15s, background .15s, border-color .15s;
+  }
+  .person-card:active{transform:scale(0.94);}
+  .person-card.selected{
+    background:rgba(255,255,255,0.22);
+    border-color:#FFFFFF;
+  }
+  .person-card .avatar{
+    width:42px; height:42px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.9);
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px;
+  }
+  .person-card .pname{
+    color:#FFFFFF;
+    font-size:12px;
+    font-weight:500;
+    text-align:center;
+    line-height:1.2;
+  }
+  .pin-section{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+  .pin-section.active{display:flex;}
+  .pin-dots{
+    display:flex;
+    gap:14px;
+  }
+  .pin-dot{
+    width:16px; height:16px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.5);
+    background:transparent;
+    transition:background .15s, border-color .15s;
+  }
+  .pin-dot.filled{
+    background:#FFFFFF;
+    border-color:#FFFFFF;
+  }
+  .pin-keypad{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
+    width:100%;
+    max-width:260px;
+  }
+  .pin-key{
+    aspect-ratio:1;
+    border-radius:50%;
+    background:rgba(255,255,255,0.12);
+    border:none;
+    color:#FFFFFF;
+    font-size:20px;
+    font-weight:500;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:background .12s, transform .1s;
+  }
+  .pin-key:active{transform:scale(0.92); background:rgba(255,255,255,0.25);}
+  .pin-key.ghost{background:transparent; cursor:default;}
+  .login-error{
+    color:#FAC775;
+    font-size:13px;
+    text-align:center;
+    min-height:18px;
+    margin-top:4px;
+  }
+  .back-link{
+    color:rgba(255,255,255,0.7);
+    font-size:13px;
+    text-align:center;
+    margin-top:18px;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+
+  /* ===== Chat screen ===== */
+  #screen-chat{
+    background:var(--bg-chat);
+  }
+
+  .chat-header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 16px;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    flex-shrink:0;
+  }
+  .chat-header .avatars-stack{display:flex;}
+  .chat-header .mini-avatar{
+    width:30px; height:30px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+    border:2px solid var(--surface);
+    margin-left:-10px;
+  }
+  .chat-header .mini-avatar:first-child{margin-left:0;}
+  .chat-header .title-block{flex:1; min-width:0;}
+  .chat-header .title-block h1{
+    font-size:16px;
+    font-weight:500;
+    margin:0;
+    line-height:1.2;
+  }
+  .chat-header .title-block .status{
+    font-size:11px;
+    color:var(--text-hint);
+    margin:0;
+    height:14px;
+  }
+  .chat-header .icon-btn{
+    width:34px; height:34px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--text-soft);
+    font-size:18px;
+    cursor:pointer;
+    background:transparent;
+    border:none;
+  }
+  .chat-header .icon-btn:active{background:var(--bg);}
+
+  #messages-container{
+    flex:1;
+    overflow-y:auto;
+    padding:14px 12px 8px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .day-divider{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-hint);
+    margin:8px 0 2px;
+    position:relative;
+  }
+
+  .msg-row{
+    display:flex;
+    gap:8px;
+    align-items:flex-end;
+    animation:bubbleIn .25s ease-out;
+  }
+  @keyframes bubbleIn{
+    from{opacity:0; transform:translateY(8px) scale(0.96);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+  .msg-row.mine{justify-content:flex-end;}
+
+  .msg-avatar{
+    width:26px; height:26px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px;
+    flex-shrink:0;
+  }
+  .msg-row.mine .msg-avatar{display:none;}
+
+  .msg-stack{
+    display:flex;
+    flex-direction:column;
+    max-width:74%;
+    position:relative;
+  }
+  .msg-row.mine .msg-stack{align-items:flex-end;}
+
+  .msg-author{
+    font-size:12px;
+    font-weight:600;
+    margin:0 0 2px 4px;
+  }
+
+  .msg-bubble{
+    border-radius:16px 16px 16px 4px;
+    padding:9px 13px;
+    background:var(--bubble-other);
+    box-shadow:var(--shadow);
+    font-size:14.5px;
+    line-height:1.4;
+    word-break:break-word;
+    position:relative;
+  }
+  .msg-row.mine .msg-bubble{
+    border-radius:16px 16px 4px 16px;
+    background:var(--bubble-mine);
+    color:var(--bubble-mine-text);
+  }
+  .msg-bubble.gif-bubble{padding:4px;}
+  .msg-bubble.gif-bubble img{
+    display:block;
+    max-width:180px;
+    max-height:180px;
+    border-radius:13px;
+  }
+  .msg-bubble.sound-bubble{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    padding:8px 14px;
+  }
+
+  .msg-time{
+    font-size:10px;
+    color:var(--text-hint);
+    margin:3px 4px 0;
+  }
+
+  .reactions-bar{
+    display:flex;
+    gap:4px;
+    margin-top:3px;
+    flex-wrap:wrap;
+  }
+  .reaction-chip{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:1px 7px;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    gap:3px;
+    box-shadow:var(--shadow);
+    cursor:pointer;
+  }
+  .reaction-chip.mine-reacted{
+    border-color:var(--teal);
+    background:var(--teal-light);
+  }
+
+  /* quick reaction popover */
+  .reaction-popover{
+    position:absolute;
+    bottom:100%;
+    margin-bottom:6px;
+    background:var(--surface);
+    border-radius:24px;
+    box-shadow:0 4px 16px rgba(0,0,0,0.15);
+    padding:6px 8px;
+    display:flex;
+    gap:4px;
+    z-index:50;
+    animation:popIn .15s ease-out;
+  }
+  @keyframes popIn{
+    from{opacity:0; transform:scale(0.8) translateY(6px);}
+    to{opacity:1; transform:scale(1) translateY(0);}
+  }
+  .reaction-popover button{
+    font-size:22px;
+    background:none;
+    border:none;
+    padding:4px;
+    cursor:pointer;
+    transition:transform .1s;
+    line-height:1;
+  }
+  .reaction-popover button:active{transform:scale(1.3);}
+
+  /* ===== Composer ===== */
+  #composer{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    padding:8px 8px 14px;
+    background:var(--surface);
+    border-top:1px solid var(--border);
+    flex-shrink:0;
+    overflow-x:auto;
+  }
+  #composer::-webkit-scrollbar{display:none;}
+  #composer .composer-icon-btn{
+    width:34px; height:34px;
+    border-radius:50%;
+    border:none;
+    background:var(--bg);
+    color:var(--text-soft);
+    font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  #composer .composer-icon-btn.active-toggle{
+    background:var(--teal-light);
+    color:var(--teal-dark);
+  }
+  #composer .composer-icon-btn:active{background:var(--border);}
+  #text-input{
+    flex:1;
+    min-width:90px;
+    border:1px solid var(--border);
+    background:var(--bg);
+    border-radius:20px;
+    padding:10px 16px;
+    font-size:14.5px;
+    font-family:'Nunito', sans-serif;
+    color:var(--text);
+    outline:none;
+    resize:none;
+    max-height:90px;
+  }
+  #send-btn{
+    width:38px; height:38px;
+    border-radius:50%;
+    background:var(--teal);
+    border:none;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+    transition:transform .1s, opacity .15s;
+  }
+  #send-btn:active{transform:scale(0.9);}
+  #send-btn:disabled{opacity:0.4;}
+  #send-btn i{color:var(--teal-light); font-size:17px;}
+
+  /* ===== GIF picker sheet ===== */
+  .sheet-overlay{
+    position:absolute; inset:0;
+    background:rgba(0,0,0,0.4);
+    display:none;
+    align-items:flex-end;
+    z-index:200;
+  }
+  .sheet-overlay.active{display:flex;}
+  .sheet{
+    width:100%;
+    background:var(--surface);
+    border-radius:20px 20px 0 0;
+    max-height:70vh;
+    display:flex;
+    flex-direction:column;
+    animation:sheetUp .2s ease-out;
+  }
+  @keyframes sheetUp{
+    from{transform:translateY(100%);}
+    to{transform:translateY(0);}
+  }
+  .sheet-handle{
+    width:36px; height:4px;
+    background:var(--border);
+    border-radius:2px;
+    margin:10px auto 8px;
+  }
+  .sheet-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 16px 10px;
+  }
+  .sheet-header h2{font-size:15px; font-weight:600; margin:0;}
+  .sheet-header .close-btn{
+    background:none; border:none; font-size:18px; color:var(--text-soft); cursor:pointer;
+  }
+  #gif-mode-tabs{
+    display:flex;
+    gap:6px;
+    padding:0 16px 10px;
+  }
+  .gif-mode-tab{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:6px 14px;
+    font-size:13px;
+    font-weight:500;
+    color:var(--text-soft);
+    cursor:pointer;
+  }
+  .gif-mode-tab.active{
+    background:var(--teal);
+    border-color:var(--teal);
+    color:#fff;
+  }
+  #gif-search{
+    margin:0 16px 10px;
+    padding:9px 14px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--bg);
+    font-size:14px;
+    outline:none;
+  }
+  #gif-results{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    padding:0 16px 16px;
+    overflow-y:auto;
+  }
+  #gif-results img{
+    width:100%;
+    border-radius:12px;
+    cursor:pointer;
+    display:block;
+    background:var(--bg);
+  }
+  #gif-results .gif-hint{
+    grid-column:1/-1;
+    text-align:center;
+    color:var(--text-hint);
+    font-size:13px;
+    padding:20px 0;
+  }
+
+  /* ===== Emoji picker ===== */
+  #emoji-category-tabs{
+    display:flex;
+    gap:4px;
+    padding:0 12px 8px;
+    overflow-x:auto;
+  }
+  #emoji-category-tabs::-webkit-scrollbar{display:none;}
+  .emoji-cat-tab{
+    flex-shrink:0;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:6px 10px;
+    font-size:18px;
+    cursor:pointer;
+  }
+  .emoji-cat-tab.active{
+    background:var(--teal-light);
+    border-color:var(--teal);
+  }
+  #emoji-grid{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:2px;
+    padding:0 12px 16px;
+    overflow-y:auto;
+  }
+  #emoji-grid button{
+    background:none;
+    border:none;
+    font-size:24px;
+    padding:8px 0;
+    cursor:pointer;
+    border-radius:10px;
+    line-height:1;
+  }
+  #emoji-grid button:active{background:var(--bg); transform:scale(1.15);}
+
+  /* ===== Sticker picker ===== */
+  #sticker-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+    padding:0 16px 16px;
+    overflow-y:auto;
+  }
+  .sticker-item{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px 4px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    cursor:pointer;
+  }
+  .sticker-item:active{transform:scale(0.94); background:var(--teal-light);}
+  .sticker-item .sticker-emoji{font-size:38px; line-height:1;}
+  .sticker-item .sticker-label{font-size:10.5px; color:var(--text-soft); text-align:center;}
+  .msg-bubble.sticker-bubble{
+    background:transparent !important;
+    box-shadow:none;
+    padding:0;
+    font-size:64px;
+    line-height:1;
+  }
+
+  .toast{
+    position:absolute;
+    bottom:90px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--text);
+    color:#fff;
+    padding:9px 18px;
+    border-radius:20px;
+    font-size:13px;
+    z-index:300;
+    opacity:0;
+    transition:opacity .25s;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .toast.show{opacity:1;}
+
+  ::-webkit-scrollbar{width:0; height:0;}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <div id="loading-screen">
+    <span class="emoji-spin">🏠</span>
+    <p>carregando a família...</p>
+  </div>
+
+  <!-- LOGIN SCREEN -->
+  <div id="screen-login" class="screen">
+    <div class="login-box">
+      <span class="hero-emoji">👋</span>
+      <h1 class="display-font">Família Conecta</h1>
+      <p class="subtitle">escolha quem você é</p>
+
+      <div class="person-grid" id="person-grid"></div>
+
+      <div class="pin-section" id="pin-section">
+        <p style="color:#fff; font-size:14px; margin:0;" id="pin-greeting">oi! qual seu PIN?</p>
+        <div class="pin-dots" id="pin-dots">
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+        </div>
+        <div class="pin-keypad" id="pin-keypad"></div>
+        <p class="login-error" id="login-error"></p>
+        <p class="back-link" id="back-link">← escolher outra pessoa</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT SCREEN -->
+  <div id="screen-chat" class="screen">
+    <div class="chat-header">
+      <div class="avatars-stack" id="header-avatars"></div>
+      <div class="title-block">
+        <h1 class="display-font">Família Conecta</h1>
+        <p class="status" id="typing-status"></p>
+      </div>
+      <button class="icon-btn" id="logout-btn" aria-label="Sair"><i class="ti ti-logout"></i></button>
+    </div>
+
+    <div id="messages-container"></div>
+
+    <div id="composer">
+      <button class="composer-icon-btn" id="emoji-btn" aria-label="Emoji"><i class="ti ti-mood-smile"></i></button>
+      <button class="composer-icon-btn" id="sticker-btn" aria-label="Figurinhas"><i class="ti ti-stack-2"></i></button>
+      <button class="composer-icon-btn" id="open-soundboard" aria-label="Sons"><i class="ti ti-volume"></i></button>
+      <button class="composer-icon-btn" id="gif-btn" aria-label="Enviar GIF"><i class="ti ti-gif"></i></button>
+      <textarea id="text-input" rows="1" placeholder="escreva algo divertido..."></textarea>
+      <button id="send-btn" disabled aria-label="Enviar"><i class="ti ti-send"></i></button>
+    </div>
+  </div>
+
+  <!-- EMOJI PICKER SHEET -->
+  <div class="sheet-overlay" id="emoji-sheet-overlay">
+    <div class="sheet" style="max-height:75vh;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h2>emojis</h2>
+        <button class="close-btn" id="close-emoji-sheet"><i class="ti ti-x"></i></button>
+      </div>
+      <div id="emoji-category-tabs"></div>
+      <div id="emoji-grid"></div>
+    </div>
+  </div>
+
+  <!-- STICKER PICKER SHEET -->
+  <div class="sheet-overlay" id="sticker-sheet-overlay">
+    <div class="sheet" style="max-height:70vh;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h2>figurinhas</h2>
+        <button class="close-btn" id="close-sticker-sheet"><i class="ti ti-x"></i></button>
+      </div>
+      <div id="sticker-grid"></div>
+    </div>
+  </div>
+
+  <!-- GIF PICKER SHEET -->
+  <div class="sheet-overlay" id="gif-sheet-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h2 id="gif-sheet-title">escolher um GIF</h2>
+        <button class="close-btn" id="close-gif-sheet"><i class="ti ti-x"></i></button>
+      </div>
+      <div id="gif-mode-tabs">
+        <button class="gif-mode-tab active" data-mode="gif">GIFs</button>
+        <button class="gif-mode-tab" data-mode="meme">memes</button>
+      </div>
+      <input type="text" id="gif-search" placeholder="buscar GIF (ex: bom dia, risada...)">
+      <div id="gif-results"><p class="gif-hint">digite algo para buscar 🔍</p></div>
+    </div>
+  </div>
+
+  <!-- SOUNDBOARD SHEET -->
+  <div class="sheet-overlay" id="sound-sheet-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h2>soundboard da família</h2>
+        <button class="close-btn" id="close-sound-sheet"><i class="ti ti-x"></i></button>
+      </div>
+      <div id="sound-results" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 16px 16px;"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot,
+  serverTimestamp, doc, updateDoc, setDoc, getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ============ CONFIGURAÇÃO ============ */
+// TROQUE pelos dados do SEU projeto Firebase (veja o guia de configuração)
+const firebaseConfig = {
+  apiKey: "AIzaSyDgie1F8Y0vAJ8XbA7ja8wdns71F1gmBQw",
+  authDomain: "rapidovai-59e6c.firebaseapp.com",
+  projectId: "rapidovai-59e6c",
+  storageBucket: "rapidovai-59e6c.firebasestorage.app",
+  messagingSenderId: "593577968084",
+  appId: "1:593577968084:web:5d0912716cb4ac141fd641"
+};
+
+// Lista da família: edite aqui os nomes, emojis (avatar) e cor de cada pessoa.
+// O PIN é guardado como string de 4 dígitos. Troque os PINs antes de usar!
+const FAMILY = [
+  { id: "vo-carlito", name: "Vô Carlito", emoji: "👴", color: "#534AB7", pin: "0000" },
+  { id: "vo-nete",    name: "Vó Nete",    emoji: "👵", color: "#BA7517", pin: "0000" },
+  { id: "lei",        name: "Lei",        emoji: "😎", color: "#D85A30", pin: "0000" },
+  { id: "xand",       name: "Xand",       emoji: "🤙", color: "#185FA5", pin: "0000" },
+  { id: "nessa",      name: "Nessa",      emoji: "💃", color: "#993556", pin: "0000" },
+  { id: "lane",       name: "Lane",       emoji: "🥳", color: "#1D9E75", pin: "0000" },
+  { id: "belly",      name: "Belly",      emoji: "🌸", color: "#D4537E", pin: "0000" },
+  { id: "will",       name: "Will",       emoji: "🔥", color: "#0F6E56", pin: "0000" },
+];
+
+// Soundboard: sons gerados na hora via Web Audio API (sem depender de links externos,
+// então nunca quebram por CORS ou link fora do ar). Veja a função playGeneratedSound().
+const SOUNDS = [
+  { id: "risada",   label: "risada 😂",    gen: "laugh" },
+  { id: "aplauso",  label: "aplausos 👏",  gen: "applause" },
+  { id: "tcham",    label: "tcham! 🎵",    gen: "tada" },
+  { id: "cachorro", label: "cachorro 🐶",  gen: "dog" },
+  { id: "gato",     label: "gato 🐱",      gen: "cat" },
+  { id: "passaro",  label: "passarinho 🐦", gen: "bird" },
+  { id: "chuva",    label: "chuva 🌧️",     gen: "rain" },
+  { id: "buzina",   label: "buzina 📯",    gen: "honk" },
+];
+
+// Tenor API (GIFs). Chave pública de demonstração do Google para o Tenor.
+// Para produção, crie sua própria chave gratuita em https://tenor.com/gifapi
+const TENOR_KEY = "LIVDSRZULELA";
+
+const QUICK_EMOJIS = ["😂","❤️","🔥","😮","🎉","👍"];
+
+/* ============ INIT ============ */
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
+let currentUser = null; // { id, name, emoji, color }
+let selectedPersonForPin = null;
+let pinBuffer = "";
+let unsubscribeMessages = null;
+let activeReactionPopover = null;
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+function showScreen(id){
+  $$('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+function showToast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function findPerson(id){
+  return FAMILY.find(p => p.id === id);
+}
+
+/* ============ LOGIN / AUTENTICAÇÃO POR PIN ============ */
+function renderPersonGrid(){
+  const grid = $('#person-grid');
+  grid.innerHTML = "";
+  FAMILY.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'person-card';
+    card.innerHTML = `
+      <div class="avatar" style="background:${p.color}22;">${p.emoji}</div>
+      <div class="pname">${p.name}</div>
+    `;
+    card.addEventListener('click', () => selectPerson(p));
+    grid.appendChild(card);
+  });
+}
+
+function selectPerson(p){
+  selectedPersonForPin = p;
+  pinBuffer = "";
+  updatePinDots();
+  $('#pin-greeting').textContent = `oi, ${p.name}! qual seu PIN?`;
+  $('#login-error').textContent = "";
+  $('#person-grid').style.display = 'none';
+  $('#pin-section').classList.add('active');
+}
+
+function renderKeypad(){
+  const keypad = $('#pin-keypad');
+  keypad.innerHTML = "";
+  const keys = ["1","2","3","4","5","6","7","8","9","ghost","0","del"];
+  keys.forEach(k => {
+    const btn = document.createElement('button');
+    if (k === "ghost"){
+      btn.className = 'pin-key ghost';
+    } else if (k === "del"){
+      btn.className = 'pin-key';
+      btn.innerHTML = '<i class="ti ti-backspace"></i>';
+      btn.addEventListener('click', () => {
+        pinBuffer = pinBuffer.slice(0, -1);
+        updatePinDots();
+      });
+    } else {
+      btn.className = 'pin-key';
+      btn.textContent = k;
+      btn.addEventListener('click', () => onPinDigit(k));
+    }
+    keypad.appendChild(btn);
+  });
+}
+
+function updatePinDots(){
+  const dots = $$('.pin-dot');
+  dots.forEach((d, i) => d.classList.toggle('filled', i < pinBuffer.length));
+}
+
+function onPinDigit(digit){
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += digit;
+  updatePinDots();
+  if (pinBuffer.length === 4){
+    setTimeout(checkPin, 150);
+  }
+}
+
+function checkPin(){
+  if (pinBuffer === selectedPersonForPin.pin){
+    currentUser = { ...selectedPersonForPin };
+    sessionUser = currentUser;
+    enterChat();
+  } else {
+    $('#login-error').textContent = "PIN incorreto, tenta de novo 🤔";
+    pinBuffer = "";
+    updatePinDots();
+  }
+}
+
+$('#back-link').addEventListener('click', () => {
+  $('#pin-section').classList.remove('active');
+  $('#person-grid').style.display = 'grid';
+  selectedPersonForPin = null;
+  pinBuffer = "";
+});
+
+let sessionUser = null; // in-memory only, no browser storage per platform constraints
+
+/* ============ ENTRAR NO CHAT ============ */
+function enterChat(){
+  showScreen('#screen-chat');
+  renderHeaderAvatars();
+  listenToMessages();
+}
+
+function renderHeaderAvatars(){
+  const wrap = $('#header-avatars');
+  wrap.innerHTML = "";
+  FAMILY.slice(0, 4).forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'mini-avatar';
+    d.style.background = p.color + '33';
+    d.textContent = p.emoji;
+    wrap.appendChild(d);
+  });
+}
+
+$('#logout-btn').addEventListener('click', () => {
+  if (unsubscribeMessages) unsubscribeMessages();
+  currentUser = null;
+  sessionUser = null;
+  selectedPersonForPin = null;
+  pinBuffer = "";
+  $('#pin-section').classList.remove('active');
+  $('#person-grid').style.display = 'grid';
+  showScreen('#screen-login');
+});
+
+/* ============ MENSAGENS (FIRESTORE) ============ */
+function listenToMessages(){
+  const q = query(collection(db, "messages"), orderBy("createdAt", "asc"), limit(200));
+  unsubscribeMessages = onSnapshot(q, (snapshot) => {
+    const container = $('#messages-container');
+    container.innerHTML = "";
+    let lastDate = null;
+    snapshot.forEach(docSnap => {
+      const msg = docSnap.data();
+      const msgId = docSnap.id;
+      const d = msg.createdAt ? msg.createdAt.toDate() : new Date();
+      const dateStr = d.toLocaleDateString('pt-BR');
+      if (dateStr !== lastDate){
+        const divider = document.createElement('div');
+        divider.className = 'day-divider';
+        divider.textContent = dateStr;
+        container.appendChild(divider);
+        lastDate = dateStr;
+      }
+      container.appendChild(renderMessage(msgId, msg, d));
+    });
+    container.scrollTop = container.scrollHeight + 9999;
+  }, (err) => {
+    console.error(err);
+    showToast("erro ao carregar mensagens 😕");
+  });
+}
+
+function renderMessage(msgId, msg, date){
+  const author = findPerson(msg.authorId) || { name: msg.authorId, emoji: "👤", color: "#888780" };
+  const isMine = currentUser && msg.authorId === currentUser.id;
+
+  const row = document.createElement('div');
+  row.className = 'msg-row' + (isMine ? ' mine' : '');
+
+  let bubbleInner = "";
+  let bubbleClass = "msg-bubble";
+
+  if (msg.type === 'text'){
+    bubbleInner = escapeHtml(msg.text || "");
+  } else if (msg.type === 'gif' || msg.type === 'meme'){
+    bubbleClass += " gif-bubble";
+    bubbleInner = `<img src="${msg.url}" alt="${msg.type === 'meme' ? 'meme' : 'GIF'}" loading="lazy">`;
+  } else if (msg.type === 'sound'){
+    bubbleClass += " sound-bubble";
+    bubbleInner = `<i class="ti ti-player-play-filled" style="font-size:14px;"></i> <span>${escapeHtml(msg.label || 'som')}</span>`;
+  } else if (msg.type === 'sticker'){
+    bubbleClass += " sticker-bubble";
+    bubbleInner = msg.emoji || "🙂";
+  }
+
+  const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  const avatarHtml = isMine ? "" : `<div class="msg-avatar" style="background:${author.color}22;">${author.emoji}</div>`;
+  const authorHtml = isMine ? "" : `<p class="msg-author" style="color:${author.color};">${escapeHtml(author.name)}</p>`;
+
+  row.innerHTML = `
+    ${avatarHtml}
+    <div class="msg-stack">
+      ${authorHtml}
+      <div class="${bubbleClass}" data-msg-id="${msgId}">${bubbleInner}</div>
+      <div class="reactions-bar" id="reactions-${msgId}"></div>
+      <p class="msg-time">${timeStr}</p>
+    </div>
+  `;
+
+  const bubbleEl = row.querySelector('.msg-bubble');
+
+  if (msg.type === 'sound'){
+    bubbleEl.addEventListener('click', () => playGeneratedSound(msg.gen));
+  }
+
+  // long-press / click to react
+  let pressTimer = null;
+  const openPopover = () => openReactionPopover(bubbleEl, msgId);
+  bubbleEl.addEventListener('touchstart', () => { pressTimer = setTimeout(openPopover, 380); });
+  bubbleEl.addEventListener('touchend', () => clearTimeout(pressTimer));
+  bubbleEl.addEventListener('dblclick', openPopover);
+
+  renderReactions(row.querySelector(`#reactions-${msgId}`), msg.reactions || {}, msgId);
+
+  return row;
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderReactions(el, reactions, msgId){
+  el.innerHTML = "";
+  const counts = {};
+  Object.values(reactions).forEach(emoji => {
+    counts[emoji] = (counts[emoji] || 0) + 1;
+  });
+  Object.entries(counts).forEach(([emoji, count]) => {
+    const mine = currentUser && reactions[currentUser.id] === emoji;
+    const chip = document.createElement('span');
+    chip.className = 'reaction-chip' + (mine ? ' mine-reacted' : '');
+    chip.textContent = `${emoji} ${count}`;
+    chip.addEventListener('click', () => toggleReaction(msgId, emoji));
+    el.appendChild(chip);
+  });
+}
+
+function openReactionPopover(anchorEl, msgId){
+  closeReactionPopover();
+  const pop = document.createElement('div');
+  pop.className = 'reaction-popover';
+  QUICK_EMOJIS.forEach(emoji => {
+    const btn = document.createElement('button');
+    btn.textContent = emoji;
+    btn.addEventListener('click', () => {
+      toggleReaction(msgId, emoji);
+      closeReactionPopover();
+    });
+    pop.appendChild(btn);
+  });
+  anchorEl.style.position = 'relative';
+  anchorEl.appendChild(pop);
+  activeReactionPopover = pop;
+  setTimeout(() => {
+    document.addEventListener('click', closeReactionPopoverOnce, { once: true });
+  }, 50);
+}
+
+function closeReactionPopoverOnce(e){
+  closeReactionPopover();
+}
+
+function closeReactionPopover(){
+  if (activeReactionPopover){
+    activeReactionPopover.remove();
+    activeReactionPopover = null;
+  }
+}
+
+async function toggleReaction(msgId, emoji){
+  if (!currentUser) return;
+  const msgRef = doc(db, "messages", msgId);
+  const snap = await getDoc(msgRef);
+  if (!snap.exists()) return;
+  const data = snap.data();
+  const reactions = { ...(data.reactions || {}) };
+  if (reactions[currentUser.id] === emoji){
+    delete reactions[currentUser.id];
+  } else {
+    reactions[currentUser.id] = emoji;
+  }
+  await updateDoc(msgRef, { reactions });
+}
+
+async function sendMessage(payload){
+  if (!currentUser) return;
+  await addDoc(collection(db, "messages"), {
+    authorId: currentUser.id,
+    createdAt: serverTimestamp(),
+    reactions: {},
+    ...payload
+  });
+}
+
+/* ============ COMPOSER: TEXTO ============ */
+const textInput = $('#text-input');
+const sendBtn = $('#send-btn');
+
+textInput.addEventListener('input', () => {
+  sendBtn.disabled = textInput.value.trim().length === 0;
+  textInput.style.height = 'auto';
+  textInput.style.height = Math.min(textInput.scrollHeight, 90) + 'px';
+});
+
+sendBtn.addEventListener('click', async () => {
+  const text = textInput.value.trim();
+  if (!text) return;
+  textInput.value = "";
+  sendBtn.disabled = true;
+  textInput.style.height = 'auto';
+  await sendMessage({ type: 'text', text });
+});
+
+textInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendBtn.click();
+  }
+});
+
+/* ============ EMOJI PICKER COMPLETO (categorias) ============ */
+const EMOJI_CATEGORIES = [
+  {
+    id: "carinhas", icon: "😂",
+    emojis: ["😀","😁","😂","🤣","😊","😍","🥰","😘","😜","🤪","😎","🥳","🤩","😇","🙃","😉","😏","😒","😢","😭","😡","🤬","😱","😴","🤔","🙄","😬","🥹","🤯","🫠","😮","😳","🥺","😤","🤫","🤭","😋","😛","🤤","🤗"]
+  },
+  {
+    id: "gestos", icon: "👍",
+    emojis: ["👍","👎","👏","🙏","🙌","👌","✌️","🤞","🤙","💪","🤝","👋","🫶","❤️","💚","💙","💛","🧡","💜","🖤","🤍","💕","💞","💖","✨","🔥","🎉","🎊","💯","⭐","👀","🫡","🤌","✋","🤚","👊","🫂"]
+  },
+  {
+    id: "animais", icon: "🐶",
+    emojis: ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦆","🦅","🦉","🐺","🐗","🐴","🦄","🐝","🦋","🐢","🐍","🐙","🐳","🐬","🐠","🦈","🐊","🐘","🦒","🦓","🐄","🐕"]
+  },
+  {
+    id: "comida", icon: "🍕",
+    emojis: ["🍕","🍔","🍟","🌮","🌭","🍿","🧀","🍗","🍖","🥩","🍳","🥞","🧇","🥐","🍞","🥖","🧁","🍰","🎂","🍩","🍪","🍫","🍬","🍭","🍦","🍨","🍧","🍉","🍓","🍇","🍌","🍎","🍊","🍍","🥭","☕","🍺","🍷","🥤","🧃"]
+  },
+  {
+    id: "atividades", icon: "⚽",
+    emojis: ["⚽","🏀","🏈","⚾","🎾","🏐","🏓","🏸","🥊","🎯","🎮","🎲","🎸","🎤","🎬","📷","🎨","🧩","🚗","✈️","🚀","🏖️","🏔️","🎆","🎄","🎁","🎈","🎀","🏆","🥇","🛒","💼","📱","💻","⏰","📅","💰","🛏️","🚿","🧹"]
+  }
+];
+
+const emojiCategoryTabs = $('#emoji-category-tabs');
+const emojiGrid = $('#emoji-grid');
+let activeEmojiCategory = EMOJI_CATEGORIES[0].id;
+
+function renderEmojiTabs(){
+  emojiCategoryTabs.innerHTML = "";
+  EMOJI_CATEGORIES.forEach(cat => {
+    const tab = document.createElement('button');
+    tab.className = 'emoji-cat-tab' + (cat.id === activeEmojiCategory ? ' active' : '');
+    tab.textContent = cat.icon;
+    tab.addEventListener('click', () => {
+      activeEmojiCategory = cat.id;
+      renderEmojiTabs();
+      renderEmojiGrid();
+    });
+    emojiCategoryTabs.appendChild(tab);
+  });
+}
+
+function renderEmojiGrid(){
+  const cat = EMOJI_CATEGORIES.find(c => c.id === activeEmojiCategory);
+  emojiGrid.innerHTML = "";
+  cat.emojis.forEach(emoji => {
+    const btn = document.createElement('button');
+    btn.textContent = emoji;
+    btn.addEventListener('click', () => {
+      textInput.value += emoji;
+      textInput.dispatchEvent(new Event('input'));
+      textInput.focus();
+    });
+    emojiGrid.appendChild(btn);
+  });
+}
+
+$('#emoji-btn').addEventListener('click', () => {
+  renderEmojiTabs();
+  renderEmojiGrid();
+  $('#emoji-sheet-overlay').classList.add('active');
+});
+$('#close-emoji-sheet').addEventListener('click', () => $('#emoji-sheet-overlay').classList.remove('active'));
+$('#emoji-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'emoji-sheet-overlay') $('#emoji-sheet-overlay').classList.remove('active'); });
+
+/* ============ FIGURINHAS / STICKERS (pacote fixo, enviados como mensagem grande) ============ */
+const STICKERS = [
+  { id: "amei",        emoji: "😍", label: "amei!" },
+  { id: "rindo",       emoji: "🤣", label: "morrendo de rir" },
+  { id: "chorando",    emoji: "😭", label: "chorando" },
+  { id: "uau",         emoji: "🤩", label: "uau!" },
+  { id: "bravo",       emoji: "😤", label: "tô bravo" },
+  { id: "festa",       emoji: "🥳", label: "festa!" },
+  { id: "sono",        emoji: "😴", label: "com sono" },
+  { id: "fominha",     emoji: "🤤", label: "com fome" },
+  { id: "beijo",       emoji: "😘", label: "beijo" },
+  { id: "fortao",      emoji: "💪", label: "tamo junto" },
+  { id: "oracao",      emoji: "🙏", label: "vai dar bom" },
+  { id: "comemorando", emoji: "🙌", label: "comemorando" },
+  { id: "pensando",    emoji: "🤔", label: "pensando..." },
+  { id: "surpreso",    emoji: "😱", label: "não acredito" },
+  { id: "coracao",     emoji: "🥰", label: "te amo" },
+];
+
+const stickerGrid = $('#sticker-grid');
+
+function renderStickerGrid(){
+  stickerGrid.innerHTML = "";
+  STICKERS.forEach(st => {
+    const item = document.createElement('div');
+    item.className = 'sticker-item';
+    item.innerHTML = `<span class="sticker-emoji">${st.emoji}</span><span class="sticker-label">${st.label}</span>`;
+    item.addEventListener('click', async () => {
+      $('#sticker-sheet-overlay').classList.remove('active');
+      await sendMessage({ type: 'sticker', emoji: st.emoji, label: st.label });
+    });
+    stickerGrid.appendChild(item);
+  });
+}
+
+$('#sticker-btn').addEventListener('click', () => {
+  renderStickerGrid();
+  $('#sticker-sheet-overlay').classList.add('active');
+});
+$('#close-sticker-sheet').addEventListener('click', () => $('#sticker-sheet-overlay').classList.remove('active'));
+$('#sticker-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'sticker-sheet-overlay') $('#sticker-sheet-overlay').classList.remove('active'); });
+
+/* ============ GIF / MEME PICKER (Tenor) ============ */
+const gifSheetOverlay = $('#gif-sheet-overlay');
+const gifSearch = $('#gif-search');
+const gifResults = $('#gif-results');
+const gifSheetTitle = $('#gif-sheet-title');
+let gifSearchTimeout = null;
+let gifMode = 'gif'; // 'gif' ou 'meme'
+
+const GIF_MODE_LABELS = {
+  gif: { title: "escolher um GIF", placeholder: "buscar GIF (ex: bom dia, risada...)" },
+  meme: { title: "escolher um meme", placeholder: "buscar meme (ex: segunda-feira, cansado...)" }
+};
+
+$$('.gif-mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    gifMode = tab.dataset.mode;
+    $$('.gif-mode-tab').forEach(t => t.classList.toggle('active', t === tab));
+    gifSheetTitle.textContent = GIF_MODE_LABELS[gifMode].title;
+    gifSearch.placeholder = GIF_MODE_LABELS[gifMode].placeholder;
+    gifSearch.value = "";
+    gifResults.innerHTML = '<p class="gif-hint">digite algo para buscar 🔍</p>';
+    if (gifMode === 'meme') searchGifs('meme', 'meme');
+  });
+});
+
+$('#gif-btn').addEventListener('click', () => {
+  gifMode = 'gif';
+  $$('.gif-mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === 'gif'));
+  gifSheetTitle.textContent = GIF_MODE_LABELS.gif.title;
+  gifSearch.placeholder = GIF_MODE_LABELS.gif.placeholder;
+  gifSheetOverlay.classList.add('active');
+  gifSearch.value = "";
+  gifResults.innerHTML = '<p class="gif-hint">digite algo para buscar 🔍</p>';
+  setTimeout(() => gifSearch.focus(), 100);
+});
+$('#close-gif-sheet').addEventListener('click', () => gifSheetOverlay.classList.remove('active'));
+gifSheetOverlay.addEventListener('click', (e) => { if (e.target === gifSheetOverlay) gifSheetOverlay.classList.remove('active'); });
+
+gifSearch.addEventListener('input', () => {
+  clearTimeout(gifSearchTimeout);
+  const term = gifSearch.value.trim();
+  if (!term){
+    if (gifMode === 'meme'){
+      gifSearchTimeout = setTimeout(() => searchGifs('meme', 'meme'), 200);
+    } else {
+      gifResults.innerHTML = '<p class="gif-hint">digite algo para buscar 🔍</p>';
+    }
+    return;
+  }
+  // no modo meme, reforça o termo "meme" na busca para priorizar resultados de meme
+  const finalTerm = gifMode === 'meme' ? `meme ${term}` : term;
+  gifSearchTimeout = setTimeout(() => searchGifs(finalTerm, gifMode), 400);
+});
+
+async function searchGifs(term, sendType){
+  gifResults.innerHTML = '<p class="gif-hint">buscando...</p>';
+  try {
+    const res = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(term)}&key=${TENOR_KEY}&client_key=familia_conecta&limit=16&locale=pt_BR`);
+    const data = await res.json();
+    gifResults.innerHTML = "";
+    if (!data.results || data.results.length === 0){
+      gifResults.innerHTML = '<p class="gif-hint">nada encontrado 😕</p>';
+      return;
+    }
+    data.results.forEach(gif => {
+      const img = document.createElement('img');
+      img.src = gif.media_formats.tinygif ? gif.media_formats.tinygif.url : gif.media_formats.gif.url;
+      img.loading = 'lazy';
+      img.addEventListener('click', async () => {
+        gifSheetOverlay.classList.remove('active');
+        const fullUrl = gif.media_formats.gif ? gif.media_formats.gif.url : img.src;
+        await sendMessage({ type: sendType === 'meme' ? 'meme' : 'gif', url: fullUrl });
+      });
+      gifResults.appendChild(img);
+    });
+  } catch(err){
+    console.error(err);
+    gifResults.innerHTML = '<p class="gif-hint">erro ao buscar 😕</p>';
+  }
+}
+
+/* ============ SOUNDBOARD ============ */
+const soundSheetOverlay = $('#sound-sheet-overlay');
+const soundResults = $('#sound-results');
+
+function renderSoundboard(){
+  soundResults.innerHTML = "";
+  SOUNDS.forEach(s => {
+    const btn = document.createElement('button');
+    btn.style = "padding:16px; border-radius:14px; border:1px solid var(--border); background:var(--bg); font-size:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px;";
+    btn.innerHTML = `<i class="ti ti-volume" style="font-size:22px; color:var(--teal);"></i><span>${s.label}</span>`;
+    btn.addEventListener('click', async () => {
+      playGeneratedSound(s.gen);
+      soundSheetOverlay.classList.remove('active');
+      await sendMessage({ type: 'sound', gen: s.gen, label: s.label });
+    });
+    soundResults.appendChild(btn);
+  });
+}
+
+$('#open-soundboard').addEventListener('click', () => {
+  renderSoundboard();
+  soundSheetOverlay.classList.add('active');
+});
+$('#close-sound-sheet').addEventListener('click', () => soundSheetOverlay.classList.remove('active'));
+soundSheetOverlay.addEventListener('click', (e) => { if (e.target === soundSheetOverlay) soundSheetOverlay.classList.remove('active'); });
+
+/* ============ SOUNDBOARD: SONS SINTETIZADOS (sem depender de URL externa) ============ */
+let sharedAudioCtx = null;
+function getAudioCtx(){
+  if (!sharedAudioCtx){
+    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
+  return sharedAudioCtx;
+}
+
+function makeNoiseBuffer(ctx, duration){
+  const bufferSize = Math.floor(ctx.sampleRate * duration);
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  return buffer;
+}
+
+function tone(ctx, { freq, start, dur, type = 'sine', gain = 0.3, slideTo = null }){
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+  if (slideTo !== null){
+    osc.frequency.linearRampToValueAtTime(slideTo, ctx.currentTime + start + dur);
+  }
+  g.gain.setValueAtTime(0, ctx.currentTime + start);
+  g.gain.linearRampToValueAtTime(gain, ctx.currentTime + start + Math.min(0.02, dur / 4));
+  g.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur);
+  osc.connect(g);
+  g.connect(ctx.destination);
+  osc.start(ctx.currentTime + start);
+  osc.stop(ctx.currentTime + start + dur + 0.02);
+}
+
+function filteredNoise(ctx, { start, dur, freq = 1000, q = 1, gain = 0.3, type = 'bandpass' }){
+  const noise = ctx.createBufferSource();
+  noise.buffer = makeNoiseBuffer(ctx, dur);
+  const filter = ctx.createBiquadFilter();
+  filter.type = type;
+  filter.frequency.value = freq;
+  filter.Q.value = q;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, ctx.currentTime + start);
+  g.gain.linearRampToValueAtTime(gain, ctx.currentTime + start + 0.02);
+  g.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur);
+  noise.connect(filter);
+  filter.connect(g);
+  g.connect(ctx.destination);
+  noise.start(ctx.currentTime + start);
+  noise.stop(ctx.currentTime + start + dur + 0.02);
+}
+
+const SOUND_GENERATORS = {
+  laugh(ctx){
+    // sequência curta de "ha-ha-ha" com tons subindo e descendo
+    [0, 0.16, 0.32, 0.48].forEach((t, i) => {
+      tone(ctx, { freq: 380 + i * 12, start: t, dur: 0.13, type: 'triangle', gain: 0.28, slideTo: 280 + i * 12 });
+    });
+  },
+  applause(ctx){
+    // várias rajadas de ruído curtas e sobrepostas, como palmas
+    for (let i = 0; i < 14; i++){
+      filteredNoise(ctx, { start: Math.random() * 0.9, dur: 0.05 + Math.random() * 0.05, freq: 2200 + Math.random() * 1500, q: 0.7, gain: 0.22 });
+    }
+  },
+  tada(ctx){
+    // fanfarra curta de 3 notas subindo + brilho final
+    [261.6, 329.6, 392.0, 523.3].forEach((f, i) => {
+      tone(ctx, { freq: f, start: i * 0.09, dur: 0.22, type: 'square', gain: 0.18 });
+    });
+    filteredNoise(ctx, { start: 0.32, dur: 0.4, freq: 6000, q: 0.5, gain: 0.12, type: 'highpass' });
+  },
+  dog(ctx){
+    // dois "au-au" curtos: tom grave com ataque rápido
+    [0, 0.22].forEach(t => {
+      tone(ctx, { freq: 180, start: t, dur: 0.12, type: 'sawtooth', gain: 0.3, slideTo: 110 });
+      filteredNoise(ctx, { start: t, dur: 0.1, freq: 600, q: 1.2, gain: 0.15 });
+    });
+  },
+  cat(ctx){
+    // "miau": deslize de frequência média subindo e caindo
+    tone(ctx, { freq: 520, start: 0, dur: 0.35, type: 'sawtooth', gain: 0.22, slideTo: 760 });
+    tone(ctx, { freq: 760, start: 0.32, dur: 0.25, type: 'sawtooth', gain: 0.18, slideTo: 480 });
+  },
+  bird(ctx){
+    // bipes curtos e agudos, tipo passarinho
+    [0, 0.1, 0.22, 0.36].forEach((t, i) => {
+      tone(ctx, { freq: 2200 + i * 300, start: t, dur: 0.07, type: 'sine', gain: 0.18, slideTo: 3000 + i * 300 });
+    });
+  },
+  rain(ctx){
+    // ruído filtrado constante, como chuva, por ~1.2s
+    filteredNoise(ctx, { start: 0, dur: 1.2, freq: 3500, q: 0.4, gain: 0.1, type: 'bandpass' });
+    for (let i = 0; i < 20; i++){
+      filteredNoise(ctx, { start: Math.random() * 1.1, dur: 0.04, freq: 4000 + Math.random() * 2000, q: 2, gain: 0.06 });
+    }
+  },
+  honk(ctx){
+    tone(ctx, { freq: 220, start: 0, dur: 0.45, type: 'sawtooth', gain: 0.28 });
+  }
+};
+
+function playGeneratedSound(genId){
+  try {
+    const ctx = getAudioCtx();
+    const fn = SOUND_GENERATORS[genId];
+    if (fn) fn(ctx);
+  } catch(e){ console.error(e); }
+}
+
+
+
+/* ============ PWA: SERVICE WORKER ============ */
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+/* ============ INIT UI ============ */
+renderPersonGrid();
+renderKeypad();
+setTimeout(() => {
+  $('#loading-screen').style.display = 'none';
+  showScreen('#screen-login');
+}, 600);
+
+</script>
+
+</body>
+</html>
