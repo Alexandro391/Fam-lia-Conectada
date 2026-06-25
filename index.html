@@ -392,19 +392,25 @@
     bottom:100%;
     margin-bottom:6px;
     background:var(--surface);
-    border-radius:24px;
+    border-radius:18px;
     box-shadow:0 4px 16px rgba(0,0,0,0.15);
     padding:6px 8px;
     display:flex;
-    gap:4px;
+    flex-direction:column;
+    gap:2px;
     z-index:50;
     animation:popIn .15s ease-out;
+    min-width:max-content;
   }
   @keyframes popIn{
     from{opacity:0; transform:scale(0.8) translateY(6px);}
     to{opacity:1; transform:scale(1) translateY(0);}
   }
-  .reaction-popover button{
+  .popover-emoji-row{
+    display:flex;
+    gap:4px;
+  }
+  .popover-emoji-row button{
     font-size:22px;
     background:none;
     border:none;
@@ -413,7 +419,37 @@
     transition:transform .1s;
     line-height:1;
   }
-  .reaction-popover button:active{transform:scale(1.3);}
+  .popover-emoji-row button:active{transform:scale(1.3);}
+  .popover-actions-row{
+    display:flex;
+    flex-direction:column;
+    border-top:0.5px solid var(--border);
+    margin-top:3px;
+    padding-top:3px;
+  }
+  .popover-action-btn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:none;
+    border:none;
+    padding:7px 10px;
+    font-size:13px;
+    color:var(--text);
+    cursor:pointer;
+    border-radius:8px;
+    text-align:left;
+    font-family:'Nunito', sans-serif;
+    white-space:nowrap;
+  }
+  .popover-action-btn:active{background:var(--bg);}
+  .popover-action-btn i{font-size:15px;}
+  .popover-action-danger{color:var(--coral);}
+  .edited-tag{
+    font-size:10.5px;
+    opacity:0.6;
+    font-style:italic;
+  }
 
   /* ===== Composer ===== */
   #composer{
@@ -629,6 +665,32 @@
     line-height:1;
   }
 
+  /* ===== Wallpaper picker ===== */
+  #wallpaper-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:10px;
+    padding:0 16px 16px;
+  }
+  .wallpaper-swatch{
+    aspect-ratio:1;
+    border-radius:14px;
+    border:2px solid var(--border);
+    cursor:pointer;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .wallpaper-swatch.active{border-color:var(--teal);}
+  .wallpaper-swatch.active::after{
+    content:"\\2713";
+    color:#fff;
+    font-size:18px;
+    font-weight:700;
+    text-shadow:0 1px 2px rgba(0,0,0,0.3);
+  }
+
   .toast{
     position:absolute;
     bottom:90px;
@@ -691,6 +753,7 @@
         <h1 class="display-font">Família Conecta</h1>
         <p class="status" id="typing-status"></p>
       </div>
+      <button class="icon-btn" id="wallpaper-btn" aria-label="Papel de parede"><i class="ti ti-photo"></i></button>
       <button class="icon-btn" id="logout-btn" aria-label="Sair"><i class="ti ti-logout"></i></button>
     </div>
 
@@ -760,6 +823,19 @@
     </div>
   </div>
 
+  <!-- WALLPAPER PICKER SHEET -->
+  <div class="sheet-overlay" id="wallpaper-sheet-overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h2>papel de parede</h2>
+        <button class="close-btn" id="close-wallpaper-sheet"><i class="ti ti-x"></i></button>
+      </div>
+      <p style="font-size:12.5px; color:var(--text-hint); margin:0 16px 12px;">só muda a tela pra você — cada um escolhe a própria cor</p>
+      <div id="wallpaper-grid"></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
 </div>
@@ -770,7 +846,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot,
-  serverTimestamp, doc, updateDoc, setDoc, getDoc
+  serverTimestamp, doc, updateDoc, setDoc, getDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ============ CONFIGURAÇÃO ============ */
@@ -999,7 +1075,7 @@ function renderMessage(msgId, msg, date){
   let bubbleClass = "msg-bubble";
 
   if (msg.type === 'text'){
-    bubbleInner = escapeHtml(msg.text || "");
+    bubbleInner = escapeHtml(msg.text || "") + (msg.editedAt ? '<span class="edited-tag"> (editado)</span>' : '');
   } else if (msg.type === 'gif' || msg.type === 'meme'){
     bubbleClass += " gif-bubble";
     bubbleInner = `<img src="${msg.url}" alt="${msg.type === 'meme' ? 'meme' : 'GIF'}" loading="lazy">`;
@@ -1032,9 +1108,9 @@ function renderMessage(msgId, msg, date){
     bubbleEl.addEventListener('click', () => playGeneratedSound(msg.gen));
   }
 
-  // long-press / click to react
+  // long-press / click to react (e editar/deletar, se for mensagem própria)
   let pressTimer = null;
-  const openPopover = () => openReactionPopover(bubbleEl, msgId);
+  const openPopover = () => openReactionPopover(bubbleEl, msgId, msg, isMine);
   bubbleEl.addEventListener('touchstart', () => { pressTimer = setTimeout(openPopover, 380); });
   bubbleEl.addEventListener('touchend', () => clearTimeout(pressTimer));
   bubbleEl.addEventListener('dblclick', openPopover);
@@ -1066,10 +1142,13 @@ function renderReactions(el, reactions, msgId){
   });
 }
 
-function openReactionPopover(anchorEl, msgId){
+function openReactionPopover(anchorEl, msgId, msg, isMine){
   closeReactionPopover();
   const pop = document.createElement('div');
   pop.className = 'reaction-popover';
+
+  const emojiRow = document.createElement('div');
+  emojiRow.className = 'popover-emoji-row';
   QUICK_EMOJIS.forEach(emoji => {
     const btn = document.createElement('button');
     btn.textContent = emoji;
@@ -1077,8 +1156,38 @@ function openReactionPopover(anchorEl, msgId){
       toggleReaction(msgId, emoji);
       closeReactionPopover();
     });
-    pop.appendChild(btn);
+    emojiRow.appendChild(btn);
   });
+  pop.appendChild(emojiRow);
+
+  // editar/deletar só aparecem para mensagens do próprio usuário
+  if (isMine){
+    const actionsRow = document.createElement('div');
+    actionsRow.className = 'popover-actions-row';
+
+    if (msg.type === 'text'){
+      const editBtn = document.createElement('button');
+      editBtn.className = 'popover-action-btn';
+      editBtn.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i> editar';
+      editBtn.addEventListener('click', () => {
+        closeReactionPopover();
+        startEditMessage(msgId, msg.text || "");
+      });
+      actionsRow.appendChild(editBtn);
+    }
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'popover-action-btn popover-action-danger';
+    deleteBtn.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i> excluir';
+    deleteBtn.addEventListener('click', () => {
+      closeReactionPopover();
+      deleteMessage(msgId);
+    });
+    actionsRow.appendChild(deleteBtn);
+
+    pop.appendChild(actionsRow);
+  }
+
   anchorEl.style.position = 'relative';
   anchorEl.appendChild(pop);
   activeReactionPopover = pop;
@@ -1113,6 +1222,56 @@ async function toggleReaction(msgId, emoji){
   await updateDoc(msgRef, { reactions });
 }
 
+/* ============ EDITAR MENSAGEM ============ */
+let editingMessageId = null;
+
+function startEditMessage(msgId, currentText){
+  editingMessageId = msgId;
+  textInput.value = currentText;
+  textInput.dispatchEvent(new Event('input'));
+  textInput.focus();
+  showEditBanner(true);
+}
+
+function cancelEditMessage(){
+  editingMessageId = null;
+  textInput.value = "";
+  textInput.dispatchEvent(new Event('input'));
+  showEditBanner(false);
+}
+
+function showEditBanner(show){
+  let banner = document.getElementById('edit-banner');
+  if (show){
+    if (!banner){
+      banner = document.createElement('div');
+      banner.id = 'edit-banner';
+      banner.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 14px; background:var(--teal-light); color:var(--teal-dark); font-size:12.5px; font-weight:500;';
+      banner.innerHTML = `<span><i class="ti ti-edit" style="vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>editando mensagem</span><button id="cancel-edit-btn" style="background:none; border:none; color:var(--teal-dark); font-size:12.5px; font-weight:500; cursor:pointer; text-decoration:underline;">cancelar</button>`;
+      $('#composer').insertAdjacentElement('beforebegin', banner);
+      banner.querySelector('#cancel-edit-btn').addEventListener('click', cancelEditMessage);
+    }
+  } else if (banner){
+    banner.remove();
+  }
+}
+
+async function saveEditedMessage(msgId, newText){
+  const msgRef = doc(db, "messages", msgId);
+  await updateDoc(msgRef, { text: newText, editedAt: serverTimestamp() });
+}
+
+/* ============ DELETAR MENSAGEM ============ */
+async function deleteMessage(msgId){
+  if (editingMessageId === msgId) cancelEditMessage();
+  try {
+    await deleteDoc(doc(db, "messages", msgId));
+  } catch(err){
+    console.error(err);
+    showToast("erro ao excluir mensagem 😕");
+  }
+}
+
 async function sendMessage(payload){
   if (!currentUser) return;
   await addDoc(collection(db, "messages"), {
@@ -1139,7 +1298,13 @@ sendBtn.addEventListener('click', async () => {
   textInput.value = "";
   sendBtn.disabled = true;
   textInput.style.height = 'auto';
-  await sendMessage({ type: 'text', text });
+  if (editingMessageId){
+    const idToSave = editingMessageId;
+    cancelEditMessage();
+    await saveEditedMessage(idToSave, text);
+  } else {
+    await sendMessage({ type: 'text', text });
+  }
 });
 
 textInput.addEventListener('keydown', (e) => {
@@ -1363,6 +1528,60 @@ $('#open-soundboard').addEventListener('click', () => {
 });
 $('#close-sound-sheet').addEventListener('click', () => soundSheetOverlay.classList.remove('active'));
 soundSheetOverlay.addEventListener('click', (e) => { if (e.target === soundSheetOverlay) soundSheetOverlay.classList.remove('active'); });
+
+/* ============ PAPEL DE PAREDE ============ */
+// Preferência pessoal de cada pessoa, salva só no próprio aparelho (não afeta os outros).
+const WALLPAPERS = [
+  { id: "padrao",  label: "padrão",  color: "#FFFBF6" },
+  { id: "creme",   label: "creme",   color: "#FBF3E7" },
+  { id: "menta",   label: "menta",   color: "#E1F5EE" },
+  { id: "ceu",     label: "céu",     color: "#E6F1FB" },
+  { id: "lilas",   label: "lilás",   color: "#EEEDFE" },
+  { id: "rosa",    label: "rosa",    color: "#FBEAF0" },
+  { id: "amarelo", label: "amarelo", color: "#FAEEDA" },
+  { id: "pessego", label: "pêssego", color: "#FAECE7" },
+  { id: "cinza",   label: "cinza claro", color: "#F1EFE8" },
+  { id: "escuro",  label: "escuro",  color: "#1C2540" },
+];
+
+function getSavedWallpaperId(){
+  try { return localStorage.getItem('familia_wallpaper') || 'padrao'; }
+  catch(e){ return 'padrao'; }
+}
+
+function applyWallpaper(id){
+  const wp = WALLPAPERS.find(w => w.id === id) || WALLPAPERS[0];
+  document.documentElement.style.setProperty('--bg-chat', wp.color);
+  try { localStorage.setItem('familia_wallpaper', wp.id); } catch(e){}
+}
+
+function renderWallpaperGrid(){
+  const grid = $('#wallpaper-grid');
+  const current = getSavedWallpaperId();
+  grid.innerHTML = "";
+  WALLPAPERS.forEach(wp => {
+    const swatch = document.createElement('div');
+    swatch.className = 'wallpaper-swatch' + (wp.id === current ? ' active' : '');
+    swatch.style.background = wp.color;
+    swatch.title = wp.label;
+    swatch.addEventListener('click', () => {
+      applyWallpaper(wp.id);
+      renderWallpaperGrid();
+      showToast(`papel de parede: ${wp.label} 🎨`);
+    });
+    grid.appendChild(swatch);
+  });
+}
+
+$('#wallpaper-btn').addEventListener('click', () => {
+  renderWallpaperGrid();
+  $('#wallpaper-sheet-overlay').classList.add('active');
+});
+$('#close-wallpaper-sheet').addEventListener('click', () => $('#wallpaper-sheet-overlay').classList.remove('active'));
+$('#wallpaper-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'wallpaper-sheet-overlay') $('#wallpaper-sheet-overlay').classList.remove('active'); });
+
+// Aplica o papel de parede salvo assim que o app carrega
+applyWallpaper(getSavedWallpaperId());
 
 /* ============ SOUNDBOARD: SONS SINTETIZADOS (sem depender de URL externa) ============ */
 let sharedAudioCtx = null;
