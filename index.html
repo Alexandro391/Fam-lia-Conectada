@@ -151,11 +151,36 @@
     border-color:#FFFFFF;
   }
   .person-card .avatar{
-    width:42px; height:42px;
+    width:48px; height:48px;
     border-radius:50%;
     background:rgba(255,255,255,0.9);
     display:flex; align-items:center; justify-content:center;
-    font-size:22px;
+    font-size:24px;
+    position:relative;
+    transition:transform 0.2s;
+  }
+  .person-card .avatar:hover{
+    transform:scale(1.05);
+  }
+  .person-card .avatar .profile-edit-btn{
+    position:absolute;
+    bottom:-4px;
+    right:-4px;
+    background:var(--teal);
+    border:2px solid #fff;
+    border-radius:50%;
+    width:20px;
+    height:20px;
+    font-size:10px;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    cursor:pointer;
+    padding:0;
+  }
+  .person-card:hover .avatar .profile-edit-btn{
+    display:flex;
   }
   .person-card .pname{
     color:#FFFFFF;
@@ -164,6 +189,28 @@
     text-align:center;
     line-height:1.2;
   }
+
+  /* Profile emoji picker sheet */
+  .profile-emoji-grid{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:6px;
+    padding:0 16px 16px;
+  }
+  .profile-emoji-grid button{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:12px;
+    font-size:28px;
+    padding:10px 0;
+    cursor:pointer;
+    transition:all 0.15s;
+  }
+  .profile-emoji-grid button:active{
+    transform:scale(0.9);
+    background:var(--teal-light);
+  }
+
   .pin-section{
     display:none;
     flex-direction:column;
@@ -305,11 +352,18 @@
   .msg-row.mine{justify-content:flex-end;}
 
   .msg-avatar{
-    width:26px; height:26px;
+    width:32px; height:32px;
     border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    font-size:13px;
+    font-size:16px;
     flex-shrink:0;
+    border:2px solid var(--surface);
+    box-shadow:var(--shadow);
+    cursor:pointer;
+    transition:transform 0.15s;
+  }
+  .msg-avatar:hover{
+    transform:scale(1.05);
   }
   .msg-row.mine .msg-avatar{display:none;}
 
@@ -684,7 +738,7 @@
   }
   .wallpaper-swatch.active{border-color:var(--teal);}
   .wallpaper-swatch.active::after{
-    content:"\\2713";
+    content:"\2713";
     color:#fff;
     font-size:18px;
     font-weight:700;
@@ -836,6 +890,22 @@
     </div>
   </div>
 
+  <!-- PROFILE EMOJI PICKER SHEET -->
+  <div class="sheet-overlay" id="profile-sheet-overlay">
+    <div class="sheet" style="max-height:60vh;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h2>escolha seu emoji de perfil</h2>
+        <button class="close-btn" id="close-profile-sheet"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:0 16px 8px; display:flex; align-items:center; gap:12px; justify-content:center;">
+        <span style="font-size:14px; color:var(--text-soft);">seu atual:</span>
+        <span id="profile-current-preview" style="font-size:32px; background:var(--bg); padding:4px 16px; border-radius:12px;"></span>
+      </div>
+      <div class="profile-emoji-grid" id="profile-emoji-grid"></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
 </div>
@@ -850,7 +920,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ============ CONFIGURAÇÃO ============ */
-// TROQUE pelos dados do SEU projeto Firebase (veja o guia de configuração)
 const firebaseConfig = {
   apiKey: "AIzaSyDgie1F8Y0vAJ8XbA7ja8wdns71F1gmBQw",
   authDomain: "rapidovai-59e6c.firebaseapp.com",
@@ -860,9 +929,8 @@ const firebaseConfig = {
   appId: "1:593577968084:web:5d0912716cb4ac141fd641"
 };
 
-// Lista da família: edite aqui os nomes, emojis (avatar) e cor de cada pessoa.
-// O PIN é guardado como string de 4 dígitos. Troque os PINs antes de usar!
-const FAMILY = [
+// Lista da família - agora com campo profileEmoji que pode ser personalizado
+const FAMILY_BASE = [
   { id: "vo-carlito", name: "Vô Carlito", emoji: "👴", color: "#534AB7", pin: "0000" },
   { id: "vo-nete",    name: "Vó Nete",    emoji: "👵", color: "#BA7517", pin: "0000" },
   { id: "lei",        name: "Lei",        emoji: "😎", color: "#D85A30", pin: "0000" },
@@ -873,8 +941,45 @@ const FAMILY = [
   { id: "will",       name: "Will",       emoji: "🔥", color: "#0F6E56", pin: "0000" },
 ];
 
-// Soundboard: sons gerados na hora via Web Audio API (sem depender de links externos,
-// então nunca quebram por CORS ou link fora do ar). Veja a função playGeneratedSound().
+// Carrega os emojis de perfil salvos no localStorage
+function getProfileEmojis() {
+  try {
+    const saved = localStorage.getItem('familia_profile_emojis');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return {};
+}
+
+function saveProfileEmoji(id, emoji) {
+  const profiles = getProfileEmojis();
+  profiles[id] = emoji;
+  localStorage.setItem('familia_profile_emojis', JSON.stringify(profiles));
+}
+
+function getProfileEmojiForPerson(person) {
+  const profiles = getProfileEmojis();
+  return profiles[person.id] || person.emoji;
+}
+
+// FAMILY com emojis dinâmicos
+const FAMILY = FAMILY_BASE.map(p => ({
+  ...p,
+  get emoji() {
+    return getProfileEmojiForPerson(p);
+  }
+}));
+
+// Profile emojis disponíveis para escolha
+const PROFILE_EMOJIS = [
+  "😀","😁","😂","🤣","😊","😍","🥰","😘","😜","🤪","😎","🥳","🤩","😇","🙃","😉","😏","😒","😢","😭","😡","🤬","😱","😴","🤔","🙄","😬","🥹","🤯","🫠","😮","😳","🥺","😤","🤫","🤭","😋","😛","🤤","🤗",
+  "👴","👵","👨","👩","🧑","👦","👧","🧒","👶","👨‍🦰","👩‍🦰",
+  "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦆","🦅","🦉","🐺","🐗","🐴","🦄","🐝","🦋","🐢","🐍","🐙","🐳","🐬","🐠","🦈","🐊","🐘","🦒","🦓","🐄","🐕",
+  "❤️","💚","💙","💛","🧡","💜","🖤","🤍","💕","💞","💖","✨","🔥","🎉","🎊","💯","⭐","👀","🫡","🤌","✋","🤚","👊","🫂",
+  "🍕","🍔","🍟","🌮","🌭","🍿","🧀","🍗","🍖","🥩","🍳","🥞","🧇","🥐","🍞","🥖","🧁","🍰","🎂","🍩","🍪","🍫","🍬","🍭","🍦","🍨","🍧","🍉","🍓","🍇","🍌","🍎","🍊","🍍","🥭","☕","🍺","🍷","🥤","🧃",
+  "⚽","🏀","🏈","⚾","🎾","🏐","🏓","🏸","🥊","🎯","🎮","🎲","🎸","🎤","🎬","📷","🎨","🧩","🚗","✈️","🚀","🏖️","🏔️","🎆","🎄","🎁","🎈","🎀","🏆","🥇","🛒","💼","📱","💻","⏰","📅","💰","🛏️","🚿","🧹"
+];
+
+// Soundboard
 const SOUNDS = [
   { id: "risada",   label: "risada 😂",    gen: "laugh" },
   { id: "aplauso",  label: "aplausos 👏",  gen: "applause" },
@@ -886,17 +991,14 @@ const SOUNDS = [
   { id: "buzina",   label: "buzina 📯",    gen: "honk" },
 ];
 
-// Tenor API (GIFs). Chave pública de demonstração do Google para o Tenor.
-// Para produção, crie sua própria chave gratuita em https://tenor.com/gifapi
 const TENOR_KEY = "LIVDSRZULELA";
-
 const QUICK_EMOJIS = ["😂","❤️","🔥","😮","🎉","👍"];
 
 /* ============ INIT ============ */
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
 
-let currentUser = null; // { id, name, emoji, color }
+let currentUser = null;
 let selectedPersonForPin = null;
 let pinBuffer = "";
 let unsubscribeMessages = null;
@@ -918,24 +1020,100 @@ function showToast(msg){
 }
 
 function findPerson(id){
-  return FAMILY.find(p => p.id === id);
+  return FAMILY_BASE.find(p => p.id === id);
+}
+
+// Função para obter o emoji atual de uma pessoa (considerando personalização)
+function getPersonEmoji(personId) {
+  const base = FAMILY_BASE.find(p => p.id === personId);
+  if (!base) return "👤";
+  const profiles = getProfileEmojis();
+  return profiles[personId] || base.emoji;
 }
 
 /* ============ LOGIN / AUTENTICAÇÃO POR PIN ============ */
 function renderPersonGrid(){
   const grid = $('#person-grid');
   grid.innerHTML = "";
-  FAMILY.forEach(p => {
+  FAMILY_BASE.forEach(p => {
     const card = document.createElement('div');
     card.className = 'person-card';
+    const emoji = getPersonEmoji(p.id);
     card.innerHTML = `
-      <div class="avatar" style="background:${p.color}22;">${p.emoji}</div>
+      <div class="avatar" style="background:${p.color}22;">
+        ${emoji}
+        <button class="profile-edit-btn" data-id="${p.id}" aria-label="Mudar emoji"><i class="ti ti-edit"></i></button>
+      </div>
       <div class="pname">${p.name}</div>
     `;
-    card.addEventListener('click', () => selectPerson(p));
+    // Clique no card = selecionar pessoa
+    card.addEventListener('click', (e) => {
+      // Se clicou no botão de editar, não seleciona
+      if (e.target.closest('.profile-edit-btn')) return;
+      selectPerson(p);
+    });
+    // Botão de editar perfil
+    const editBtn = card.querySelector('.profile-edit-btn');
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openProfilePicker(p);
+    });
     grid.appendChild(card);
   });
 }
+
+function openProfilePicker(person) {
+  const overlay = $('#profile-sheet-overlay');
+  const grid = $('#profile-emoji-grid');
+  const preview = $('#profile-current-preview');
+  
+  const currentEmoji = getPersonEmoji(person.id);
+  preview.textContent = currentEmoji;
+  
+  grid.innerHTML = "";
+  // Adiciona o emoji atual primeiro (destacado)
+  const currentBtn = document.createElement('button');
+  currentBtn.textContent = currentEmoji;
+  currentBtn.style.background = 'var(--teal-light)';
+  currentBtn.style.borderColor = 'var(--teal)';
+  currentBtn.addEventListener('click', () => {
+    // já é o atual, só fecha
+    overlay.classList.remove('active');
+  });
+  grid.appendChild(currentBtn);
+  
+  // Adiciona os outros emojis
+  PROFILE_EMOJIS.forEach(emoji => {
+    if (emoji === currentEmoji) return; // já adicionado
+    const btn = document.createElement('button');
+    btn.textContent = emoji;
+    btn.addEventListener('click', () => {
+      // Salva o novo emoji
+      saveProfileEmoji(person.id, emoji);
+      // Atualiza a UI
+      renderPersonGrid();
+      if (currentUser && currentUser.id === person.id) {
+        // Atualiza o usuário atual
+        currentUser.emoji = emoji;
+        renderHeaderAvatars();
+      }
+      showToast(`perfil atualizado! ${emoji}`);
+      overlay.classList.remove('active');
+    });
+    grid.appendChild(btn);
+  });
+  
+  overlay.classList.add('active');
+}
+
+$('#close-profile-sheet').addEventListener('click', () => {
+  $('#profile-sheet-overlay').classList.remove('active');
+});
+$('#profile-sheet-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'profile-sheet-overlay') {
+    $('#profile-sheet-overlay').classList.remove('active');
+  }
+});
 
 function selectPerson(p){
   selectedPersonForPin = p;
@@ -987,7 +1165,11 @@ function onPinDigit(digit){
 
 function checkPin(){
   if (pinBuffer === selectedPersonForPin.pin){
-    currentUser = { ...selectedPersonForPin };
+    const emoji = getPersonEmoji(selectedPersonForPin.id);
+    currentUser = { 
+      ...selectedPersonForPin, 
+      emoji: emoji 
+    };
     sessionUser = currentUser;
     enterChat();
   } else {
@@ -1004,7 +1186,7 @@ $('#back-link').addEventListener('click', () => {
   pinBuffer = "";
 });
 
-let sessionUser = null; // in-memory only, no browser storage per platform constraints
+let sessionUser = null;
 
 /* ============ ENTRAR NO CHAT ============ */
 function enterChat(){
@@ -1016,11 +1198,11 @@ function enterChat(){
 function renderHeaderAvatars(){
   const wrap = $('#header-avatars');
   wrap.innerHTML = "";
-  FAMILY.slice(0, 4).forEach(p => {
+  FAMILY_BASE.slice(0, 4).forEach(p => {
     const d = document.createElement('div');
     d.className = 'mini-avatar';
     d.style.background = p.color + '33';
-    d.textContent = p.emoji;
+    d.textContent = getPersonEmoji(p.id);
     wrap.appendChild(d);
   });
 }
@@ -1065,7 +1247,11 @@ function listenToMessages(){
 }
 
 function renderMessage(msgId, msg, date){
-  const author = findPerson(msg.authorId) || { name: msg.authorId, emoji: "👤", color: "#888780" };
+  const authorBase = findPerson(msg.authorId);
+  const authorEmoji = authorBase ? getPersonEmoji(authorBase.id) : "👤";
+  const authorName = authorBase ? authorBase.name : msg.authorId;
+  const authorColor = authorBase ? authorBase.color : "#888780";
+  
   const isMine = currentUser && msg.authorId === currentUser.id;
 
   const row = document.createElement('div');
@@ -1089,8 +1275,8 @@ function renderMessage(msgId, msg, date){
 
   const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-  const avatarHtml = isMine ? "" : `<div class="msg-avatar" style="background:${author.color}22;">${author.emoji}</div>`;
-  const authorHtml = isMine ? "" : `<p class="msg-author" style="color:${author.color};">${escapeHtml(author.name)}</p>`;
+  const avatarHtml = isMine ? "" : `<div class="msg-avatar" style="background:${authorColor}22;" title="${authorName}">${authorEmoji}</div>`;
+  const authorHtml = isMine ? "" : `<p class="msg-author" style="color:${authorColor};">${escapeHtml(authorName)}</p>`;
 
   row.innerHTML = `
     ${avatarHtml}
@@ -1108,7 +1294,6 @@ function renderMessage(msgId, msg, date){
     bubbleEl.addEventListener('click', () => playGeneratedSound(msg.gen));
   }
 
-  // long-press / click to react (e editar/deletar, se for mensagem própria)
   let pressTimer = null;
   const openPopover = () => openReactionPopover(bubbleEl, msgId, msg, isMine);
   bubbleEl.addEventListener('touchstart', () => { pressTimer = setTimeout(openPopover, 380); });
@@ -1160,7 +1345,6 @@ function openReactionPopover(anchorEl, msgId, msg, isMine){
   });
   pop.appendChild(emojiRow);
 
-  // editar/deletar só aparecem para mensagens do próprio usuário
   if (isMine){
     const actionsRow = document.createElement('div');
     actionsRow.className = 'popover-actions-row';
@@ -1314,7 +1498,7 @@ textInput.addEventListener('keydown', (e) => {
   }
 });
 
-/* ============ EMOJI PICKER COMPLETO (categorias) ============ */
+/* ============ EMOJI PICKER COMPLETO ============ */
 const EMOJI_CATEGORIES = [
   {
     id: "carinhas", icon: "😂",
@@ -1380,7 +1564,7 @@ $('#emoji-btn').addEventListener('click', () => {
 $('#close-emoji-sheet').addEventListener('click', () => $('#emoji-sheet-overlay').classList.remove('active'));
 $('#emoji-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'emoji-sheet-overlay') $('#emoji-sheet-overlay').classList.remove('active'); });
 
-/* ============ FIGURINHAS / STICKERS (pacote fixo, enviados como mensagem grande) ============ */
+/* ============ FIGURINHAS / STICKERS ============ */
 const STICKERS = [
   { id: "amei",        emoji: "😍", label: "amei!" },
   { id: "rindo",       emoji: "🤣", label: "morrendo de rir" },
@@ -1422,13 +1606,13 @@ $('#sticker-btn').addEventListener('click', () => {
 $('#close-sticker-sheet').addEventListener('click', () => $('#sticker-sheet-overlay').classList.remove('active'));
 $('#sticker-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'sticker-sheet-overlay') $('#sticker-sheet-overlay').classList.remove('active'); });
 
-/* ============ GIF / MEME PICKER (Tenor) ============ */
+/* ============ GIF / MEME PICKER ============ */
 const gifSheetOverlay = $('#gif-sheet-overlay');
 const gifSearch = $('#gif-search');
 const gifResults = $('#gif-results');
 const gifSheetTitle = $('#gif-sheet-title');
 let gifSearchTimeout = null;
-let gifMode = 'gif'; // 'gif' ou 'meme'
+let gifMode = 'gif';
 
 const GIF_MODE_LABELS = {
   gif: { title: "escolher um GIF", placeholder: "buscar GIF (ex: bom dia, risada...)" },
@@ -1471,7 +1655,6 @@ gifSearch.addEventListener('input', () => {
     }
     return;
   }
-  // no modo meme, reforça o termo "meme" na busca para priorizar resultados de meme
   const finalTerm = gifMode === 'meme' ? `meme ${term}` : term;
   gifSearchTimeout = setTimeout(() => searchGifs(finalTerm, gifMode), 400);
 });
@@ -1530,7 +1713,6 @@ $('#close-sound-sheet').addEventListener('click', () => soundSheetOverlay.classL
 soundSheetOverlay.addEventListener('click', (e) => { if (e.target === soundSheetOverlay) soundSheetOverlay.classList.remove('active'); });
 
 /* ============ PAPEL DE PAREDE ============ */
-// Preferência pessoal de cada pessoa, salva só no próprio aparelho (não afeta os outros).
 const WALLPAPERS = [
   { id: "padrao",  label: "padrão",  color: "#FFFBF6" },
   { id: "creme",   label: "creme",   color: "#FBF3E7" },
@@ -1580,10 +1762,9 @@ $('#wallpaper-btn').addEventListener('click', () => {
 $('#close-wallpaper-sheet').addEventListener('click', () => $('#wallpaper-sheet-overlay').classList.remove('active'));
 $('#wallpaper-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'wallpaper-sheet-overlay') $('#wallpaper-sheet-overlay').classList.remove('active'); });
 
-// Aplica o papel de parede salvo assim que o app carrega
 applyWallpaper(getSavedWallpaperId());
 
-/* ============ SOUNDBOARD: SONS SINTETIZADOS (sem depender de URL externa) ============ */
+/* ============ SOUNDBOARD: SONS SINTETIZADOS ============ */
 let sharedAudioCtx = null;
 function getAudioCtx(){
   if (!sharedAudioCtx){
@@ -1638,44 +1819,37 @@ function filteredNoise(ctx, { start, dur, freq = 1000, q = 1, gain = 0.3, type =
 
 const SOUND_GENERATORS = {
   laugh(ctx){
-    // sequência curta de "ha-ha-ha" com tons subindo e descendo
     [0, 0.16, 0.32, 0.48].forEach((t, i) => {
       tone(ctx, { freq: 380 + i * 12, start: t, dur: 0.13, type: 'triangle', gain: 0.28, slideTo: 280 + i * 12 });
     });
   },
   applause(ctx){
-    // várias rajadas de ruído curtas e sobrepostas, como palmas
     for (let i = 0; i < 14; i++){
       filteredNoise(ctx, { start: Math.random() * 0.9, dur: 0.05 + Math.random() * 0.05, freq: 2200 + Math.random() * 1500, q: 0.7, gain: 0.22 });
     }
   },
   tada(ctx){
-    // fanfarra curta de 3 notas subindo + brilho final
     [261.6, 329.6, 392.0, 523.3].forEach((f, i) => {
       tone(ctx, { freq: f, start: i * 0.09, dur: 0.22, type: 'square', gain: 0.18 });
     });
     filteredNoise(ctx, { start: 0.32, dur: 0.4, freq: 6000, q: 0.5, gain: 0.12, type: 'highpass' });
   },
   dog(ctx){
-    // dois "au-au" curtos: tom grave com ataque rápido
     [0, 0.22].forEach(t => {
       tone(ctx, { freq: 180, start: t, dur: 0.12, type: 'sawtooth', gain: 0.3, slideTo: 110 });
       filteredNoise(ctx, { start: t, dur: 0.1, freq: 600, q: 1.2, gain: 0.15 });
     });
   },
   cat(ctx){
-    // "miau": deslize de frequência média subindo e caindo
     tone(ctx, { freq: 520, start: 0, dur: 0.35, type: 'sawtooth', gain: 0.22, slideTo: 760 });
     tone(ctx, { freq: 760, start: 0.32, dur: 0.25, type: 'sawtooth', gain: 0.18, slideTo: 480 });
   },
   bird(ctx){
-    // bipes curtos e agudos, tipo passarinho
     [0, 0.1, 0.22, 0.36].forEach((t, i) => {
       tone(ctx, { freq: 2200 + i * 300, start: t, dur: 0.07, type: 'sine', gain: 0.18, slideTo: 3000 + i * 300 });
     });
   },
   rain(ctx){
-    // ruído filtrado constante, como chuva, por ~1.2s
     filteredNoise(ctx, { start: 0, dur: 1.2, freq: 3500, q: 0.4, gain: 0.1, type: 'bandpass' });
     for (let i = 0; i < 20; i++){
       filteredNoise(ctx, { start: Math.random() * 1.1, dur: 0.04, freq: 4000 + Math.random() * 2000, q: 2, gain: 0.06 });
@@ -1693,8 +1867,6 @@ function playGeneratedSound(genId){
     if (fn) fn(ctx);
   } catch(e){ console.error(e); }
 }
-
-
 
 /* ============ PWA: SERVICE WORKER ============ */
 if ('serviceWorker' in navigator){
