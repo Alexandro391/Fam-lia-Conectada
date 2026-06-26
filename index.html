@@ -20,7 +20,7 @@
   --brand:        #0A5E49;
   --brand-light:  #0F6E56;
   --brand-pale:   #D9F0E8;
-  --brand-dark:   #063328;
+  --brand-dark:   #084036;
 
   --bg:           #F0F2F5;
   --bg-chat:      #EAE5DC;
@@ -558,7 +558,7 @@ body { display: flex; justify-content: center; }
   background: var(--input-bg);
   border: 1px solid var(--border);
   border-radius: 22px;
-  display: flex; align-items: flex-end; gap: 6px;
+  display: flex; align-items: center; gap: 4px;
   padding: 6px 6px 6px 14px;
   transition: box-shadow 0.15s;
 }
@@ -600,40 +600,47 @@ body { display: flex; justify-content: center; }
 #send-btn:disabled { opacity: 0.35; box-shadow: none; cursor: default; }
 #send-btn i { color: #fff; font-size: 15px; }
 
+/* ===== HEADER QUICK SHORTCUTS ===== */
+#header-shortcuts {
+  display: flex; align-items: center;
+  padding: 0 4px;
+  background: rgba(0,0,0,0.18);
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.header-shortcut-btn {
+  flex: 1; min-width: 0; height: 36px;
+  border-radius: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none;
+  color: rgba(255,255,255,0.88);
+  font-size: clamp(17px, 4.5vw, 22px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s, color 0.12s;
+}
+.header-shortcut-btn:active { background: rgba(255,255,255,0.16); color: #fff; }
+
 /* ===== QUICK BAR (above composer) ===== */
 #quick-bar {
-  display: flex; align-items: center; justify-content: space-around;
-  padding: 6px 12px;
+  display: flex; align-items: center;
+  padding: 2px 8px 0;
   background: var(--surface);
   border-top: 1px solid var(--border);
   flex-shrink: 0;
 }
 .quick-bar-btn {
-  width: 40px; height: 36px; border-radius: 10px;
+  flex: 1; min-width: 0; height: 40px;
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   background: transparent; border: none;
-  color: var(--text-2); font-size: 20px;
+  color: var(--text-2);
+  font-size: clamp(18px, 4.5vw, 22px);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s, color 0.12s;
 }
 .quick-bar-btn:active { background: var(--brand-pale); color: var(--brand-light); }
-
-/* ===== HEADER QUICK SHORTCUTS ===== */
-#header-shortcuts {
-  display: flex; align-items: center; gap: 2px;
-  padding: 4px 8px;
-  background: var(--brand-dark);
-  flex-shrink: 0;
-}
-.header-shortcut-btn {
-  flex: 1; height: 32px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  background: transparent; border: none;
-  color: rgba(255,255,255,0.75); font-size: 18px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.header-shortcut-btn:active { background: rgba(255,255,255,0.15); color: #fff; }
 
 
 /* Action bars (reply / edit) */
