@@ -1287,7 +1287,7 @@ const SOUNDS = [
   { id: "chuva", label: "chuva 🌧️", gen: "rain" }, { id: "buzina", label: "buzina 📯", gen: "honk" }
 ];
 
-const TENOR_KEY = "LIVDSRZULELA";
+const GIPHY_KEY = "dc6zaTOxFJmzC"; // chave pública Giphy (desenvolvimento)
 const QUICK_EMOJIS = ["😂","❤️","🔥","😮","🎉","👍"];
 const PROFILE_EMOJIS = ["😀","😁","😂","🤣","😊","😍","🥰","😘","😜","🤪","😎","🥳","🤩","😇","🙃","😉","😏","😒","😢","😭","😡","🤬","😱","😴","🤔","🙄","😬","🥹","🤯","🫠","😮","😳","🥺","😤","🤫","🤭","😋","😛","🤤","🤗","👴","👵","🐶","🐱","🐰","🦊","🐻","🐼","🐨","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦄","🐝","🦋","🍕","🍔","🍟","🌮","🍿","🍗","🍳","🥞","🍰","🎂","🍩","🍪","🍫","🍦","🍉","🍓","🍌","🍎","☕","🍺","🥤","⚽","🏀","🎯","🎮","🎸","🎤","🎬","📷","🎨","🧩","🚗","✈️","🚀","🏖️","🎆","🎄","🎁","🏆","🥇"];
 
@@ -2074,14 +2074,22 @@ gifSearch.addEventListener('input',()=>{
 async function searchGifs(term, sendType){
   gifResults.innerHTML='<p class="gif-hint">buscando...</p>';
   try {
-    const res=await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(term)}&key=${TENOR_KEY}&client_key=familia_conecta&limit=16&locale=pt_BR`);
-    const data=await res.json(); gifResults.innerHTML="";
-    if(!data.results||data.results.length===0){ gifResults.innerHTML='<p class="gif-hint">nada encontrado 😕</p>'; return; }
-    data.results.forEach(gif=>{
-      const img=document.createElement('img');
-      img.src=gif.media_formats.tinygif?gif.media_formats.tinygif.url:gif.media_formats.gif.url;
-      img.loading='lazy';
-      img.addEventListener('click', async ()=>{ gifSheetOverlay.classList.remove('active'); const fullUrl=gif.media_formats.gif?gif.media_formats.gif.url:img.src; await sendMessage({ type:sendType==='meme'?'meme':'gif', url:fullUrl }); });
+    const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(term)}&limit=16&lang=pt&rating=pg-13`;
+    const res = await fetch(url);
+    const data = await res.json();
+    gifResults.innerHTML = "";
+    if(!data.data || data.data.length === 0){ gifResults.innerHTML='<p class="gif-hint">nada encontrado 😕</p>'; return; }
+    data.data.forEach(gif => {
+      const img = document.createElement('img');
+      const preview = gif.images.fixed_width_small?.url || gif.images.fixed_width?.url;
+      const full    = gif.images.fixed_width?.url || gif.images.original?.url;
+      img.src = preview;
+      img.loading = 'lazy';
+      img.style.cssText = 'width:100%;border-radius:12px;cursor:pointer;display:block;background:var(--surface-2)';
+      img.addEventListener('click', async () => {
+        gifSheetOverlay.classList.remove('active');
+        await sendMessage({ type: sendType === 'meme' ? 'meme' : 'gif', url: full });
+      });
       gifResults.appendChild(img);
     });
   } catch(err){ console.error(err); gifResults.innerHTML='<p class="gif-hint">erro ao buscar 😕</p>'; }
