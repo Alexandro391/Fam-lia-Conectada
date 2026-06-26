@@ -892,6 +892,61 @@ body { display: flex; justify-content: center; }
 
 /* GIF search input display fix */
 #gif-search { display: block; }
+
+/* ===== COUNTDOWN & EXCLUSÃO ===== */
+.msg-countdown {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-left: 4px;
+  opacity: 0.7;
+  letter-spacing: 0.02em;
+  transition: color 0.3s;
+}
+.msg-countdown.urgent { color: #E53935; opacity: 1; font-weight: 600; }
+
+@keyframes msgFadeOut {
+  0%   { opacity: 1; transform: scale(1); max-height: 200px; }
+  60%  { opacity: 0; transform: scale(0.88) translateY(-4px); max-height: 200px; }
+  100% { opacity: 0; max-height: 0; margin: 0; padding: 0; }
+}
+.msg-row.deleting {
+  animation: msgFadeOut 0.45s ease forwards;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Edit bar pulse */
+#edit-bar.active {
+  animation: editPulse 2s ease-in-out;
+}
+@keyframes editPulse {
+  0%,100% { background: var(--reply-bar); }
+  50% { background: color-mix(in srgb, var(--brand-pale) 60%, var(--reply-bar)); }
+}
+
+/* Delete confirm toast-style inline */
+.delete-confirm-pop {
+  position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+  margin-bottom: 8px;
+  background: #1e2a30;
+  color: #fff;
+  border-radius: 14px;
+  padding: 8px 12px;
+  font-size: 13px;
+  display: flex; align-items: center; gap: 8px;
+  z-index: 60;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  white-space: nowrap;
+  animation: popIn .18s cubic-bezier(.22,.65,.36,1);
+}
+.delete-confirm-pop button {
+  border: none; border-radius: 8px; padding: 4px 10px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+.delete-confirm-pop .dc-cancel { background: rgba(255,255,255,0.15); color: #fff; }
+.delete-confirm-pop .dc-confirm { background: #E53935; color: #fff; }
+
 </style>
 </head>
 <body>
@@ -1424,9 +1479,34 @@ function renderMessage(msgId, msg, date){
       ${authorHtml}
       <div class="${bubbleClass}" data-msg-id="${msgId}">${bubbleInner}</div>
       <div class="reactions-bar" id="reactions-${msgId}"></div>
-      <p class="msg-time">${timeStr} <span class="status-icon">${statusIcon}</span></p>
+      <p class="msg-time">${timeStr} <span class="msg-countdown" id="cd-${msgId}"></span><span class="status-icon">${statusIcon}</span></p>
     </div>
   `;
+
+  // Auto-delete countdown (1 minuto = 60s)
+  const AUTO_DELETE_MS = 60 * 1000;
+  const msgAge = Date.now() - date.getTime();
+  const remaining = AUTO_DELETE_MS - msgAge;
+  if (remaining > 0) {
+    const cdEl = row.querySelector(`#cd-${msgId}`);
+    let secsLeft = Math.ceil(remaining / 1000);
+    const tick = () => {
+      if (!cdEl || !cdEl.isConnected) return;
+      if (secsLeft <= 0) {
+        row.classList.add('deleting');
+        setTimeout(() => deleteMessage(msgId), 420);
+        return;
+      }
+      cdEl.textContent = `⏱ ${secsLeft}s`;
+      cdEl.classList.toggle('urgent', secsLeft <= 10);
+      secsLeft--;
+      setTimeout(tick, 1000);
+    };
+    tick();
+  } else {
+    // Mensagem já deveria ter sido excluída — remove imediatamente
+    setTimeout(() => deleteMessage(msgId), 50);
+  }
 
   const bubbleEl = row.querySelector('.msg-bubble');
 
@@ -1524,7 +1604,24 @@ function openReactionPopover(anchorEl, msgId, msg, isMine){
     }
     const deleteBtn = document.createElement('button'); deleteBtn.className = 'popover-action-btn popover-action-danger';
     deleteBtn.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i> excluir';
-    deleteBtn.addEventListener('click', () => { closeReactionPopover(); deleteMessage(msgId); });
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Substitui botão por confirmação inline
+      const confirmPop = document.createElement('div');
+      confirmPop.className = 'delete-confirm-pop';
+      confirmPop.innerHTML = `<span>excluir mensagem?</span><button class="dc-cancel">cancelar</button><button class="dc-confirm">excluir</button>`;
+      confirmPop.querySelector('.dc-cancel').addEventListener('click', (ev) => { ev.stopPropagation(); closeReactionPopover(); });
+      confirmPop.querySelector('.dc-confirm').addEventListener('click', (ev) => { ev.stopPropagation(); closeReactionPopover(); deleteMessage(msgId); });
+      // Fecha popover normal e abre confirmação na própria bolha
+      const bubbleAnchor = document.querySelector(`[data-msg-id="${msgId}"]`);
+      closeReactionPopover();
+      if(bubbleAnchor){
+        bubbleAnchor.style.position = 'relative';
+        bubbleAnchor.appendChild(confirmPop);
+        activeReactionPopover = confirmPop;
+        setTimeout(() => { document.addEventListener('click', closeReactionPopoverOnce, { once: true }); }, 50);
+      }
+    });
     actionsRow.appendChild(deleteBtn);
   }
   pop.appendChild(actionsRow);
@@ -1561,12 +1658,33 @@ function startEditMessage(msgId, currentText){
   textInput.value = currentText;
   textInput.dispatchEvent(new Event('input'));
   textInput.focus();
-  $('#edit-bar').classList.add('active');
+  const bar = $('#edit-bar');
+  bar.classList.add('active');
+  bar.classList.remove('active'); // reset para re-trigger animação
+  void bar.offsetWidth;
+  bar.classList.add('active');
 }
 function cancelEditMessage(){ editingMessageId = null; textInput.value=""; textInput.dispatchEvent(new Event('input')); $('#edit-bar').classList.remove('active'); }
 $('#edit-close').addEventListener('click', cancelEditMessage);
 async function saveEditedMessage(msgId, newText){ const ref=doc(db,"messages",msgId); await updateDoc(ref, { text: newText, editedAt: serverTimestamp() }); }
-async function deleteMessage(msgId){ if(editingMessageId===msgId)cancelEditMessage(); try{ await deleteDoc(doc(db,"messages",msgId)); }catch(err){ console.error(err); showToast("erro ao excluir 😕"); } }
+
+async function deleteMessage(msgId){
+  if(editingMessageId===msgId) cancelEditMessage();
+  // Animação de saída antes de excluir do Firestore
+  const bubble = document.querySelector(`[data-msg-id="${msgId}"]`);
+  const row = bubble?.closest('.msg-row');
+  if(row && !row.classList.contains('deleting')){
+    row.classList.add('deleting');
+    await new Promise(r => setTimeout(r, 420));
+  }
+  try{
+    await deleteDoc(doc(db,"messages",msgId));
+  }catch(err){
+    console.error(err);
+    if(row) row.classList.remove('deleting');
+    showToast("erro ao excluir 😕");
+  }
+}
 
 async function sendMessage(payload){
   if(!currentUser)return;
