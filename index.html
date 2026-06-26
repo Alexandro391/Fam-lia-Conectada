@@ -518,7 +518,7 @@ let isRecording = false;
 let mediaRecorder = null;
 let audioChunks = [];
 let typingTimeout = null;
-let lastSnapshot = null; // para evitar re-render desnecessário
+
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -647,55 +647,95 @@ async function markAsRead(messages){
   }
 }
 
-// ============ MESSAGES (OTIMIZADO) ============
+// ============ MESSAGES (INCREMENTAL - SEM PISCAR) ============
+function getOrCreateDayDivider(container, dateStr) {
+  const existing = Array.from(container.querySelectorAll('.day-divider'))
+    .find(el => el.textContent === dateStr);
+  if (existing) return existing;
+  const divider = document.createElement('div');
+  divider.className = 'day-divider';
+  divider.dataset.date = dateStr;
+  divider.textContent = dateStr;
+  return divider;
+}
+
 function listenToMessages(){
+  // Carregamento inicial: busca todos os docs de uma vez sem piscar
+  let initialLoad = true;
   const q = query(collection(db, "messages"), orderBy("createdAt", "asc"), limit(200));
   unsubscribeMessages = onSnapshot(q, async (snapshot) => {
-    // Evita re-render se não houve mudanças estruturais
-    if (lastSnapshot && lastSnapshot.docs.length === snapshot.docs.length &&
-        lastSnapshot.docs.every((d, i) => d.id === snapshot.docs[i].id)) {
-      // Apenas atualiza reações/status sem recriar tudo
-      // (simplificado: recria apenas se houver novas mensagens)
-      // Para simplificar, vamos verificar se há novos documentos
-      const newDocs = snapshot.docChanges().some(change => change.type === 'added');
-      if (!newDocs) {
-        // Atualiza apenas reações e status (se necessário)
-        // Mas para manter a robustez, vamos recriar só se houver mudanças
-        // Para evitar tremulação, vamos apenas atualizar o DOM incrementalmente (não implementado aqui)
-        // Por enquanto, recria sempre, mas com animação suave
-        // Vamos limitar a recriação apenas se houver mudanças reais
-        // Como é uma demo, manteremos a recriação, mas com scroll suave
-      }
-    }
-    lastSnapshot = snapshot;
-
     const container = $('#messages-container');
     const allMsgs = [];
-    let lastDate = null;
-    // Limpa e recria (mas com animação suave)
-    container.innerHTML = "";
-    snapshot.forEach(docSnap => {
-      const msg = docSnap.data();
-      const msgId = docSnap.id;
-      const d = msg.createdAt ? msg.createdAt.toDate() : new Date();
-      const dateStr = d.toLocaleDateString('pt-BR');
-      if (dateStr !== lastDate){
-        const divider = document.createElement('div');
-        divider.className = 'day-divider';
-        divider.textContent = dateStr;
-        container.appendChild(divider);
-        lastDate = dateStr;
-      }
-      const el = renderMessage(msgId, msg, d);
-      container.appendChild(el);
-      allMsgs.push({ id: msgId, authorId: msg.authorId, readBy: msg.readBy || [] });
-    });
-    // Scroll suave para o final
-    requestAnimationFrame(() => {
-      if (container.lastElementChild) {
-        container.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      }
-    });
+
+    if (initialLoad) {
+      // Na primeira carga, renderiza tudo de uma vez (sem animação para não piscar)
+      initialLoad = false;
+      container.innerHTML = "";
+      let lastDate = null;
+      snapshot.forEach(docSnap => {
+        const msg = docSnap.data();
+        const msgId = docSnap.id;
+        const d = msg.createdAt ? msg.createdAt.toDate() : new Date();
+        const dateStr = d.toLocaleDateString('pt-BR');
+        if (dateStr !== lastDate) {
+          container.appendChild(getOrCreateDayDivider(container, dateStr));
+          lastDate = dateStr;
+        }
+        const el = renderMessage(msgId, msg, d);
+        el.style.animation = 'none'; // sem animação no carregamento inicial
+        container.appendChild(el);
+        allMsgs.push({ id: msgId, authorId: msg.authorId, readBy: msg.readBy || [] });
+      });
+      requestAnimationFrame(() => {
+        if (container.lastElementChild)
+          container.lastElementChild.scrollIntoView({ block: 'end' });
+      });
+    } else {
+      // Atualizações incrementais: só mexe no que mudou
+      snapshot.docChanges().forEach(change => {
+        const msg = change.doc.data();
+        const msgId = change.doc.id;
+        const d = msg.createdAt ? msg.createdAt.toDate() : new Date();
+        allMsgs.push({ id: msgId, authorId: msg.authorId, readBy: msg.readBy || [] });
+
+        if (change.type === 'added') {
+          if (container.querySelector(`[data-msg-id="${msgId}"]`)) return;
+          const dateStr = d.toLocaleDateString('pt-BR');
+          // Insere divisor de data se necessário
+          const lastDivider = container.querySelector('.day-divider:last-of-type');
+          if (!lastDivider || lastDivider.dataset.date !== dateStr) {
+            container.appendChild(getOrCreateDayDivider(container, dateStr));
+          }
+          const el = renderMessage(msgId, msg, d);
+          container.appendChild(el);
+          requestAnimationFrame(() => {
+            el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          });
+
+        } else if (change.type === 'modified') {
+          const existingBubble = container.querySelector(`[data-msg-id="${msgId}"]`);
+          if (!existingBubble) return;
+          const newEl = renderMessage(msgId, msg, d);
+          // Atualiza só o conteúdo da bolha (texto, edição)
+          const newBubble = newEl.querySelector('.msg-bubble');
+          if (newBubble) existingBubble.innerHTML = newBubble.innerHTML;
+          // Atualiza barra de reações
+          const reactBar = document.querySelector(`#reactions-${msgId}`);
+          const newReactBar = newEl.querySelector('.reactions-bar');
+          if (reactBar && newReactBar) reactBar.innerHTML = newReactBar.innerHTML;
+          // Atualiza horário / status de leitura
+          const row = existingBubble.closest('.msg-row');
+          const timeEl = row?.querySelector('.msg-time');
+          const newTimeEl = newEl.querySelector('.msg-time');
+          if (timeEl && newTimeEl) timeEl.innerHTML = newTimeEl.innerHTML;
+
+        } else if (change.type === 'removed') {
+          const existingBubble = container.querySelector(`[data-msg-id="${msgId}"]`);
+          if (existingBubble) existingBubble.closest('.msg-row')?.remove();
+        }
+      });
+    }
+
     await markAsRead(allMsgs);
   }, (err) => { console.error(err); showToast("erro ao carregar mensagens 😕"); });
   listenTypingStatus();
