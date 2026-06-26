@@ -7,14 +7,18 @@
 <meta name="theme-color" content="#0F6E56">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- CORREÇÃO: meta tag para PWA -->
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+<!-- CORREÇÃO: URL do Tabler Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/tabler-icons.min.css">
+
 <style>
-  /* ========== TEMA CLARO (padrão) ========== */
+  /* ===== TEMA CLARO (padrão) ===== */
   :root {
     --bg: #FFF8F1;
     --bg-chat: #FFFBF6;
@@ -34,7 +38,7 @@
     --reply-bar-border: #0F6E56;
   }
 
-  /* ========== TEMA ESCURO ========== */
+  /* ===== TEMA ESCURO ===== */
   [data-theme="dark"] {
     --bg: #0B141A;
     --bg-chat: #1A2B33;
@@ -439,13 +443,31 @@
   <div class="toast" id="toast"></div>
 </div>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/tabler-icons.min.css">
 
 <script type="module">
+// ============================================================
+// ATENÇÃO: Se você receber erro "Missing or insufficient permissions"
+// no console, significa que as regras de segurança do Firestore
+// estão bloqueando o acesso. Para corrigir, vá no Firebase Console
+// → Firestore Database → Rules e cole:
+//
+// rules_version = '2';
+// service cloud.firestore {
+//   match /databases/{database}/documents {
+//     match /{document=**} {
+//       allow read, write: if true;
+//     }
+//   }
+// }
+//
+// (Isso é apenas para testes; em produção, restrinja adequadamente)
+// ============================================================
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot,
-  serverTimestamp, doc, updateDoc, getDoc, deleteDoc, setDoc, where
+  serverTimestamp, doc, updateDoc, getDoc, deleteDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ============ CONFIG ============ */
@@ -567,7 +589,7 @@ function enterChat(){ showScreen('#screen-chat'); renderHeaderAvatars(); listenT
 function renderHeaderAvatars(){ const wrap=$('#header-avatars'); wrap.innerHTML=""; FAMILY_BASE.slice(0,4).forEach(p=>{ const d=document.createElement('div'); d.className='mini-avatar'; d.style.background=p.color+'33'; d.textContent=getPersonEmoji(p.id); wrap.appendChild(d); }); }
 $('#logout-btn').addEventListener('click',()=>{ if(unsubscribeMessages)unsubscribeMessages(); currentUser=null; selectedPersonForPin=null; pinBuffer=""; $('#pin-section').classList.remove('active'); $('#person-grid').style.display='grid'; showScreen('#screen-login'); });
 
-// Status (Online / Last Seen / Typing)
+// Status
 async function updateStatus(online){
   if(!currentUser)return;
   try{
@@ -583,7 +605,6 @@ async function updateTyping(isTyping){
   }catch(e){}
 }
 
-// Listen to typing status
 function listenTypingStatus(){
   onSnapshot(collection(db, "status"), (snapshot) => {
     const typingUsers = [];
@@ -608,7 +629,6 @@ function listenTypingStatus(){
   });
 }
 
-// Mark messages as read
 async function markAsRead(messages){
   if(!currentUser)return;
   const batch = [];
@@ -618,7 +638,6 @@ async function markAsRead(messages){
     }
   });
   if(batch.length === 0)return;
-  // We'll mark individually to avoid transaction complexity
   for(const msg of batch){
     try {
       const ref = doc(db, "messages", msg.id);
@@ -660,7 +679,6 @@ function listenToMessages(){
       allMsgs.push({ id: msgId, authorId: msg.authorId, readBy: msg.readBy || [] });
     });
     container.scrollTop = container.scrollHeight + 9999;
-    // Mark as read
     await markAsRead(allMsgs);
   }, (err) => { console.error(err); showToast("erro ao carregar mensagens 😕"); });
   listenTypingStatus();
@@ -678,7 +696,6 @@ function renderMessage(msgId, msg, date){
   let bubbleInner = "";
   let bubbleClass = "msg-bubble";
 
-  // Reply Quote
   let replyHtml = "";
   if(msg.replyTo){
     const replyAuthor = getPersonName(msg.replyTo.authorId);
@@ -716,20 +733,13 @@ function renderMessage(msgId, msg, date){
     bubbleInner = msg.emoji || "🙂";
   }
 
-  // Status icon (mine)
   let statusIcon = "";
   if(isMine){
     const readBy = msg.readBy || [];
-    if(readBy.length > 1 || (readBy.length === 1 && !readBy.includes(currentUser.id))){
-      // At least someone else read it (or user read their own? actually if readBy includes other ids)
-      const others = readBy.filter(id => id !== currentUser.id);
-      if(others.length > 0) statusIcon = '✅✅';
-      else statusIcon = '✅';
-    } else if(readBy.length === 1 && readBy.includes(currentUser.id)){
-      statusIcon = '✅';
-    } else {
-      statusIcon = '⏳';
-    }
+    const others = readBy.filter(id => id !== currentUser.id);
+    if(others.length > 0) statusIcon = '✅✅';
+    else if(readBy.length > 0) statusIcon = '✅';
+    else statusIcon = '⏳';
   }
 
   const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -748,7 +758,6 @@ function renderMessage(msgId, msg, date){
 
   const bubbleEl = row.querySelector('.msg-bubble');
 
-  // Audio logic
   if(msg.type === 'audio'){
     const audioEl = row.querySelector(`#audio-${msgId}`);
     const playBtn = row.querySelector(`#play-${msgId}`);
@@ -824,7 +833,6 @@ function openReactionPopover(anchorEl, msgId, msg, isMine){
   pop.appendChild(emojiRow);
   const actionsRow = document.createElement('div'); actionsRow.className = 'popover-actions-row';
   
-  // Reply
   const replyBtn = document.createElement('button'); replyBtn.className = 'popover-action-btn';
   replyBtn.innerHTML = '<i class="ti ti-corner-up-left" aria-hidden="true"></i> responder';
   replyBtn.addEventListener('click', () => {
@@ -903,7 +911,6 @@ textInput.addEventListener('input', () => {
   const hasMedia = pendingMediaDataUrl !== null;
   sendBtn.disabled = !(hasText || hasMedia || isRecording);
   textInput.style.height = 'auto'; textInput.style.height = Math.min(textInput.scrollHeight, 90) + 'px';
-  // Typing indicator
   clearTimeout(typingTimeout);
   if(hasText){ updateTyping(true); }
   typingTimeout = setTimeout(() => updateTyping(false), 2000);
@@ -927,7 +934,7 @@ sendBtn.addEventListener('click', async () => {
 });
 textInput.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendBtn.click(); } });
 
-// ============ MEDIA (Photo/Video) ============
+// ============ MEDIA ============
 const attachInput = $('#attach-input'); const mediaPreviewBar = $('#media-preview-bar');
 const mediaPreviewImg = $('#media-preview-img'); const mediaPreviewVideo = $('#media-preview-video');
 const mediaPreviewInfo = $('#media-preview-info'); const mediaPreviewClose = $('#media-preview-close');
@@ -957,7 +964,6 @@ function clearPendingMedia(){ pendingMediaFile=null; pendingMediaDataUrl=null; m
 
 // ============ VOICE RECORDING ============
 const micBtn = $('#mic-btn');
-let audioContext = null;
 micBtn.addEventListener('click', async () => {
   if(isRecording){ stopRecording(); return; }
   try {
@@ -1122,8 +1128,6 @@ if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator
 // ============ INIT ============
 renderPersonGrid(); renderKeypad();
 setTimeout(() => { $('#loading-screen').style.display = 'none'; showScreen('#screen-login'); }, 600);
-
-// Apply theme on load
 setTheme(getTheme());
 </script>
 </body>
