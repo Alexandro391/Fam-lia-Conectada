@@ -144,6 +144,7 @@
     gap:6px;
     cursor:pointer;
     transition:transform .15s, background .15s, border-color .15s;
+    position:relative;
   }
   .person-card:active{transform:scale(0.94);}
   .person-card.selected{
@@ -209,6 +210,10 @@
   .profile-emoji-grid button:active{
     transform:scale(0.9);
     background:var(--teal-light);
+  }
+  .profile-emoji-grid button.current-emoji{
+    background:var(--teal-light);
+    border-color:var(--teal);
   }
 
   .pin-section{
@@ -916,7 +921,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot,
-  serverTimestamp, doc, updateDoc, setDoc, getDoc, deleteDoc
+  serverTimestamp, doc, updateDoc, getDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ============ CONFIGURAÇÃO ============ */
@@ -929,7 +934,6 @@ const firebaseConfig = {
   appId: "1:593577968084:web:5d0912716cb4ac141fd641"
 };
 
-// Lista da família - agora com campo profileEmoji que pode ser personalizado
 const FAMILY_BASE = [
   { id: "vo-carlito", name: "Vô Carlito", emoji: "👴", color: "#534AB7", pin: "0000" },
   { id: "vo-nete",    name: "Vó Nete",    emoji: "👵", color: "#BA7517", pin: "0000" },
@@ -941,7 +945,7 @@ const FAMILY_BASE = [
   { id: "will",       name: "Will",       emoji: "🔥", color: "#0F6E56", pin: "0000" },
 ];
 
-// Carrega os emojis de perfil salvos no localStorage
+// ============ FUNÇÕES DE PERFIL (EMOJI PERSONALIZADO) ============
 function getProfileEmojis() {
   try {
     const saved = localStorage.getItem('familia_profile_emojis');
@@ -956,18 +960,26 @@ function saveProfileEmoji(id, emoji) {
   localStorage.setItem('familia_profile_emojis', JSON.stringify(profiles));
 }
 
-function getProfileEmojiForPerson(person) {
+function getPersonEmoji(personId) {
+  const base = FAMILY_BASE.find(p => p.id === personId);
+  if (!base) return "👤";
   const profiles = getProfileEmojis();
-  return profiles[person.id] || person.emoji;
+  return profiles[personId] || base.emoji;
 }
 
-// FAMILY com emojis dinâmicos
-const FAMILY = FAMILY_BASE.map(p => ({
-  ...p,
-  get emoji() {
-    return getProfileEmojiForPerson(p);
-  }
-}));
+function getPersonName(personId) {
+  const base = FAMILY_BASE.find(p => p.id === personId);
+  return base ? base.name : personId;
+}
+
+function getPersonColor(personId) {
+  const base = FAMILY_BASE.find(p => p.id === personId);
+  return base ? base.color : "#888780";
+}
+
+function findPerson(id){
+  return FAMILY_BASE.find(p => p.id === id);
+}
 
 // Profile emojis disponíveis para escolha
 const PROFILE_EMOJIS = [
@@ -979,7 +991,6 @@ const PROFILE_EMOJIS = [
   "⚽","🏀","🏈","⚾","🎾","🏐","🏓","🏸","🥊","🎯","🎮","🎲","🎸","🎤","🎬","📷","🎨","🧩","🚗","✈️","🚀","🏖️","🏔️","🎆","🎄","🎁","🎈","🎀","🏆","🥇","🛒","💼","📱","💻","⏰","📅","💰","🛏️","🚿","🧹"
 ];
 
-// Soundboard
 const SOUNDS = [
   { id: "risada",   label: "risada 😂",    gen: "laugh" },
   { id: "aplauso",  label: "aplausos 👏",  gen: "applause" },
@@ -1019,18 +1030,6 @@ function showToast(msg){
   setTimeout(() => t.classList.remove('show'), 1800);
 }
 
-function findPerson(id){
-  return FAMILY_BASE.find(p => p.id === id);
-}
-
-// Função para obter o emoji atual de uma pessoa (considerando personalização)
-function getPersonEmoji(personId) {
-  const base = FAMILY_BASE.find(p => p.id === personId);
-  if (!base) return "👤";
-  const profiles = getProfileEmojis();
-  return profiles[personId] || base.emoji;
-}
-
 /* ============ LOGIN / AUTENTICAÇÃO POR PIN ============ */
 function renderPersonGrid(){
   const grid = $('#person-grid');
@@ -1041,61 +1040,56 @@ function renderPersonGrid(){
     const emoji = getPersonEmoji(p.id);
     card.innerHTML = `
       <div class="avatar" style="background:${p.color}22;">
-        ${emoji}
+        <span class="avatar-emoji">${emoji}</span>
         <button class="profile-edit-btn" data-id="${p.id}" aria-label="Mudar emoji"><i class="ti ti-edit"></i></button>
       </div>
       <div class="pname">${p.name}</div>
     `;
-    // Clique no card = selecionar pessoa
     card.addEventListener('click', (e) => {
-      // Se clicou no botão de editar, não seleciona
       if (e.target.closest('.profile-edit-btn')) return;
       selectPerson(p);
     });
-    // Botão de editar perfil
     const editBtn = card.querySelector('.profile-edit-btn');
     editBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      openProfilePicker(p);
+      openProfilePicker(p.id);
     });
     grid.appendChild(card);
   });
 }
 
-function openProfilePicker(person) {
+function openProfilePicker(personId) {
   const overlay = $('#profile-sheet-overlay');
   const grid = $('#profile-emoji-grid');
   const preview = $('#profile-current-preview');
   
-  const currentEmoji = getPersonEmoji(person.id);
+  const currentEmoji = getPersonEmoji(personId);
   preview.textContent = currentEmoji;
   
   grid.innerHTML = "";
+  
   // Adiciona o emoji atual primeiro (destacado)
   const currentBtn = document.createElement('button');
   currentBtn.textContent = currentEmoji;
-  currentBtn.style.background = 'var(--teal-light)';
-  currentBtn.style.borderColor = 'var(--teal)';
+  currentBtn.className = 'current-emoji';
   currentBtn.addEventListener('click', () => {
-    // já é o atual, só fecha
     overlay.classList.remove('active');
   });
   grid.appendChild(currentBtn);
   
   // Adiciona os outros emojis
   PROFILE_EMOJIS.forEach(emoji => {
-    if (emoji === currentEmoji) return; // já adicionado
+    if (emoji === currentEmoji) return;
     const btn = document.createElement('button');
     btn.textContent = emoji;
     btn.addEventListener('click', () => {
-      // Salva o novo emoji
-      saveProfileEmoji(person.id, emoji);
-      // Atualiza a UI
+      saveProfileEmoji(personId, emoji);
+      // Atualiza a UI completamente
       renderPersonGrid();
-      if (currentUser && currentUser.id === person.id) {
-        // Atualiza o usuário atual
+      renderHeaderAvatars();
+      // Se o usuário atual é essa pessoa, atualiza o currentUser
+      if (currentUser && currentUser.id === personId) {
         currentUser.emoji = emoji;
-        renderHeaderAvatars();
       }
       showToast(`perfil atualizado! ${emoji}`);
       overlay.classList.remove('active');
@@ -1170,7 +1164,6 @@ function checkPin(){
       ...selectedPersonForPin, 
       emoji: emoji 
     };
-    sessionUser = currentUser;
     enterChat();
   } else {
     $('#login-error').textContent = "PIN incorreto, tenta de novo 🤔";
@@ -1186,8 +1179,6 @@ $('#back-link').addEventListener('click', () => {
   pinBuffer = "";
 });
 
-let sessionUser = null;
-
 /* ============ ENTRAR NO CHAT ============ */
 function enterChat(){
   showScreen('#screen-chat');
@@ -1198,6 +1189,7 @@ function enterChat(){
 function renderHeaderAvatars(){
   const wrap = $('#header-avatars');
   wrap.innerHTML = "";
+  // Mostra os primeiros 4 membros da família no header
   FAMILY_BASE.slice(0, 4).forEach(p => {
     const d = document.createElement('div');
     d.className = 'mini-avatar';
@@ -1210,7 +1202,6 @@ function renderHeaderAvatars(){
 $('#logout-btn').addEventListener('click', () => {
   if (unsubscribeMessages) unsubscribeMessages();
   currentUser = null;
-  sessionUser = null;
   selectedPersonForPin = null;
   pinBuffer = "";
   $('#pin-section').classList.remove('active');
@@ -1247,10 +1238,9 @@ function listenToMessages(){
 }
 
 function renderMessage(msgId, msg, date){
-  const authorBase = findPerson(msg.authorId);
-  const authorEmoji = authorBase ? getPersonEmoji(authorBase.id) : "👤";
-  const authorName = authorBase ? authorBase.name : msg.authorId;
-  const authorColor = authorBase ? authorBase.color : "#888780";
+  const authorEmoji = getPersonEmoji(msg.authorId);
+  const authorName = getPersonName(msg.authorId);
+  const authorColor = getPersonColor(msg.authorId);
   
   const isMine = currentUser && msg.authorId === currentUser.id;
 
@@ -1498,7 +1488,7 @@ textInput.addEventListener('keydown', (e) => {
   }
 });
 
-/* ============ EMOJI PICKER COMPLETO ============ */
+/* ============ EMOJI PICKER ============ */
 const EMOJI_CATEGORIES = [
   {
     id: "carinhas", icon: "😂",
@@ -1564,7 +1554,7 @@ $('#emoji-btn').addEventListener('click', () => {
 $('#close-emoji-sheet').addEventListener('click', () => $('#emoji-sheet-overlay').classList.remove('active'));
 $('#emoji-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'emoji-sheet-overlay') $('#emoji-sheet-overlay').classList.remove('active'); });
 
-/* ============ FIGURINHAS / STICKERS ============ */
+/* ============ FIGURINHAS ============ */
 const STICKERS = [
   { id: "amei",        emoji: "😍", label: "amei!" },
   { id: "rindo",       emoji: "🤣", label: "morrendo de rir" },
@@ -1606,7 +1596,7 @@ $('#sticker-btn').addEventListener('click', () => {
 $('#close-sticker-sheet').addEventListener('click', () => $('#sticker-sheet-overlay').classList.remove('active'));
 $('#sticker-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'sticker-sheet-overlay') $('#sticker-sheet-overlay').classList.remove('active'); });
 
-/* ============ GIF / MEME PICKER ============ */
+/* ============ GIF / MEME ============ */
 const gifSheetOverlay = $('#gif-sheet-overlay');
 const gifSearch = $('#gif-search');
 const gifResults = $('#gif-results');
@@ -1764,7 +1754,7 @@ $('#wallpaper-sheet-overlay').addEventListener('click', (e) => { if (e.target.id
 
 applyWallpaper(getSavedWallpaperId());
 
-/* ============ SOUNDBOARD: SONS SINTETIZADOS ============ */
+/* ============ SOUNDS ============ */
 let sharedAudioCtx = null;
 function getAudioCtx(){
   if (!sharedAudioCtx){
@@ -1868,14 +1858,14 @@ function playGeneratedSound(genId){
   } catch(e){ console.error(e); }
 }
 
-/* ============ PWA: SERVICE WORKER ============ */
+/* ============ PWA ============ */
 if ('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 }
 
-/* ============ INIT UI ============ */
+/* ============ INIT ============ */
 renderPersonGrid();
 renderKeypad();
 setTimeout(() => {
