@@ -191,31 +191,6 @@
     line-height:1.2;
   }
 
-  /* Profile emoji picker sheet */
-  .profile-emoji-grid{
-    display:grid;
-    grid-template-columns:repeat(6, 1fr);
-    gap:6px;
-    padding:0 16px 16px;
-  }
-  .profile-emoji-grid button{
-    background:var(--bg);
-    border:1px solid var(--border);
-    border-radius:12px;
-    font-size:28px;
-    padding:10px 0;
-    cursor:pointer;
-    transition:all 0.15s;
-  }
-  .profile-emoji-grid button:active{
-    transform:scale(0.9);
-    background:var(--teal-light);
-  }
-  .profile-emoji-grid button.current-emoji{
-    background:var(--teal-light);
-    border-color:var(--teal);
-  }
-
   .pin-section{
     display:none;
     flex-direction:column;
@@ -408,6 +383,14 @@
     max-height:180px;
     border-radius:13px;
   }
+  .msg-bubble.photo-bubble{padding:4px;}
+  .msg-bubble.photo-bubble img{
+    display:block;
+    max-width:220px;
+    max-height:300px;
+    border-radius:13px;
+    object-fit:cover;
+  }
   .msg-bubble.sound-bubble{
     display:flex;
     align-items:center;
@@ -538,6 +521,10 @@
     color:var(--teal-dark);
   }
   #composer .composer-icon-btn:active{background:var(--border);}
+  #composer .composer-icon-btn.photo-btn{
+    background:var(--teal-light);
+    color:var(--teal);
+  }
   #text-input{
     flex:1;
     min-width:90px;
@@ -565,6 +552,35 @@
   #send-btn:active{transform:scale(0.9);}
   #send-btn:disabled{opacity:0.4;}
   #send-btn i{color:var(--teal-light); font-size:17px;}
+
+  /* Photo preview */
+  .photo-preview-bar{
+    display:none;
+    align-items:center;
+    gap:12px;
+    padding:8px 16px;
+    background:var(--teal-light);
+    border-top:1px solid var(--border);
+  }
+  .photo-preview-bar.active{display:flex;}
+  .photo-preview-bar img{
+    width:50px;
+    height:50px;
+    border-radius:8px;
+    object-fit:cover;
+  }
+  .photo-preview-bar .preview-info{
+    flex:1;
+    font-size:13px;
+    color:var(--text-soft);
+  }
+  .photo-preview-bar .preview-close{
+    background:none;
+    border:none;
+    font-size:18px;
+    cursor:pointer;
+    color:var(--text-soft);
+  }
 
   /* ===== GIF picker sheet ===== */
   .sheet-overlay{
@@ -697,7 +713,7 @@
   /* ===== Sticker picker ===== */
   #sticker-grid{
     display:grid;
-    grid-template-columns:repeat(3, 1fr);
+    grid-template-columns:repeat(4, 1fr);
     gap:10px;
     padding:0 16px 16px;
     overflow-y:auto;
@@ -712,9 +728,10 @@
     align-items:center;
     gap:4px;
     cursor:pointer;
+    transition:all 0.15s;
   }
   .sticker-item:active{transform:scale(0.94); background:var(--teal-light);}
-  .sticker-item .sticker-emoji{font-size:38px; line-height:1;}
+  .sticker-item .sticker-emoji{font-size:48px; line-height:1;}
   .sticker-item .sticker-label{font-size:10.5px; color:var(--text-soft); text-align:center;}
   .msg-bubble.sticker-bubble{
     background:transparent !important;
@@ -722,6 +739,28 @@
     padding:0;
     font-size:64px;
     line-height:1;
+  }
+  /* Sticker categories */
+  .sticker-categories{
+    display:flex;
+    gap:6px;
+    padding:0 16px 10px;
+    overflow-x:auto;
+  }
+  .sticker-categories::-webkit-scrollbar{display:none;}
+  .sticker-cat-btn{
+    flex-shrink:0;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:4px 12px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .sticker-cat-btn.active{
+    background:var(--teal);
+    color:#fff;
+    border-color:var(--teal);
   }
 
   /* ===== Wallpaper picker ===== */
@@ -748,6 +787,31 @@
     font-size:18px;
     font-weight:700;
     text-shadow:0 1px 2px rgba(0,0,0,0.3);
+  }
+
+  /* Profile emoji picker */
+  .profile-emoji-grid{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:6px;
+    padding:0 16px 16px;
+  }
+  .profile-emoji-grid button{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:12px;
+    font-size:28px;
+    padding:10px 0;
+    cursor:pointer;
+    transition:all 0.15s;
+  }
+  .profile-emoji-grid button:active{
+    transform:scale(0.9);
+    background:var(--teal-light);
+  }
+  .profile-emoji-grid button.current-emoji{
+    background:var(--teal-light);
+    border-color:var(--teal);
   }
 
   .toast{
@@ -818,11 +882,20 @@
 
     <div id="messages-container"></div>
 
+    <!-- Photo Preview Bar -->
+    <div class="photo-preview-bar" id="photo-preview-bar">
+      <img id="photo-preview-img" src="" alt="Preview">
+      <span class="preview-info" id="photo-preview-info">foto selecionada</span>
+      <button class="preview-close" id="photo-preview-close"><i class="ti ti-x"></i></button>
+    </div>
+
     <div id="composer">
       <button class="composer-icon-btn" id="emoji-btn" aria-label="Emoji"><i class="ti ti-mood-smile"></i></button>
       <button class="composer-icon-btn" id="sticker-btn" aria-label="Figurinhas"><i class="ti ti-stack-2"></i></button>
       <button class="composer-icon-btn" id="open-soundboard" aria-label="Sons"><i class="ti ti-volume"></i></button>
       <button class="composer-icon-btn" id="gif-btn" aria-label="Enviar GIF"><i class="ti ti-gif"></i></button>
+      <button class="composer-icon-btn photo-btn" id="photo-btn" aria-label="Enviar foto"><i class="ti ti-camera"></i></button>
+      <input type="file" id="photo-input" accept="image/*" style="display:none;">
       <textarea id="text-input" rows="1" placeholder="escreva algo divertido..."></textarea>
       <button id="send-btn" disabled aria-label="Enviar"><i class="ti ti-send"></i></button>
     </div>
@@ -849,6 +922,7 @@
         <h2>figurinhas</h2>
         <button class="close-btn" id="close-sticker-sheet"><i class="ti ti-x"></i></button>
       </div>
+      <div class="sticker-categories" id="sticker-categories"></div>
       <div id="sticker-grid"></div>
     </div>
   </div>
@@ -945,7 +1019,7 @@ const FAMILY_BASE = [
   { id: "will",       name: "Will",       emoji: "🔥", color: "#0F6E56", pin: "0000" },
 ];
 
-// ============ FUNÇÕES DE PERFIL (EMOJI PERSONALIZADO) ============
+// ============ FUNÇÕES DE PERFIL ============
 function getProfileEmojis() {
   try {
     const saved = localStorage.getItem('familia_profile_emojis');
@@ -981,7 +1055,6 @@ function findPerson(id){
   return FAMILY_BASE.find(p => p.id === id);
 }
 
-// Profile emojis disponíveis para escolha
 const PROFILE_EMOJIS = [
   "😀","😁","😂","🤣","😊","😍","🥰","😘","😜","🤪","😎","🥳","🤩","😇","🙃","😉","😏","😒","😢","😭","😡","🤬","😱","😴","🤔","🙄","😬","🥹","🤯","🫠","😮","😳","🥺","😤","🤫","🤭","😋","😛","🤤","🤗",
   "👴","👵","👨","👩","🧑","👦","👧","🧒","👶","👨‍🦰","👩‍🦰",
@@ -990,6 +1063,112 @@ const PROFILE_EMOJIS = [
   "🍕","🍔","🍟","🌮","🌭","🍿","🧀","🍗","🍖","🥩","🍳","🥞","🧇","🥐","🍞","🥖","🧁","🍰","🎂","🍩","🍪","🍫","🍬","🍭","🍦","🍨","🍧","🍉","🍓","🍇","🍌","🍎","🍊","🍍","🥭","☕","🍺","🍷","🥤","🧃",
   "⚽","🏀","🏈","⚾","🎾","🏐","🏓","🏸","🥊","🎯","🎮","🎲","🎸","🎤","🎬","📷","🎨","🧩","🚗","✈️","🚀","🏖️","🏔️","🎆","🎄","🎁","🎈","🎀","🏆","🥇","🛒","💼","📱","💻","⏰","📅","💰","🛏️","🚿","🧹"
 ];
+
+// ============ FIGURINHAS POR CATEGORIA ============
+const STICKER_CATEGORIES = {
+  "emoji": {
+    label: "😊 emoji",
+    stickers: [
+      { emoji: "😍", label: "amei" },
+      { emoji: "🤣", label: "rindo" },
+      { emoji: "😭", label: "chorando" },
+      { emoji: "🤩", label: "uau" },
+      { emoji: "😤", label: "bravo" },
+      { emoji: "🥳", label: "festa" },
+      { emoji: "😴", label: "sono" },
+      { emoji: "🤤", label: "fome" },
+      { emoji: "😘", label: "beijo" },
+      { emoji: "💪", label: "força" },
+      { emoji: "🙏", label: "orando" },
+      { emoji: "🙌", label: "comemorando" },
+      { emoji: "🤔", label: "pensando" },
+      { emoji: "😱", label: "surpreso" },
+      { emoji: "🥰", label: "amor" },
+      { emoji: "😎", label: "descolado" },
+      { emoji: "🤗", label: "abraço" },
+      { emoji: "😇", label: "anjinho" },
+      { emoji: "🥺", label: "pidão" },
+      { emoji: "🫣", label: "vergonha" },
+      { emoji: "🤭", label: "fofoca" },
+      { emoji: "🫠", label: "derretido" }
+    ]
+  },
+  "animais": {
+    label: "🐾 animais",
+    stickers: [
+      { emoji: "🐶", label: "cachorro" },
+      { emoji: "🐱", label: "gato" },
+      { emoji: "🐰", label: "coelho" },
+      { emoji: "🦊", label: "raposa" },
+      { emoji: "🐻", label: "urso" },
+      { emoji: "🐼", label: "panda" },
+      { emoji: "🐨", label: "coala" },
+      { emoji: "🦁", label: "leão" },
+      { emoji: "🐮", label: "vaca" },
+      { emoji: "🐷", label: "porco" },
+      { emoji: "🐸", label: "sapo" },
+      { emoji: "🐵", label: "macaco" },
+      { emoji: "🐔", label: "galinha" },
+      { emoji: "🐧", label: "pinguim" },
+      { emoji: "🐦", label: "passarinho" },
+      { emoji: "🦄", label: "unicórnio" },
+      { emoji: "🐝", label: "abelha" },
+      { emoji: "🦋", label: "borboleta" }
+    ]
+  },
+  "comida": {
+    label: "🍕 comida",
+    stickers: [
+      { emoji: "🍕", label: "pizza" },
+      { emoji: "🍔", label: "hambúrguer" },
+      { emoji: "🍟", label: "fritas" },
+      { emoji: "🌮", label: "taco" },
+      { emoji: "🍿", label: "pipoca" },
+      { emoji: "🍗", label: "frango" },
+      { emoji: "🍳", label: "ovo" },
+      { emoji: "🥞", label: "panqueca" },
+      { emoji: "🍰", label: "bolo" },
+      { emoji: "🎂", label: "aniversário" },
+      { emoji: "🍩", label: "donut" },
+      { emoji: "🍪", label: "biscoito" },
+      { emoji: "🍫", label: "chocolate" },
+      { emoji: "🍦", label: "sorvete" },
+      { emoji: "🍉", label: "melancia" },
+      { emoji: "🍓", label: "morango" },
+      { emoji: "🍌", label: "banana" },
+      { emoji: "🍎", label: "maçã" },
+      { emoji: "☕", label: "café" },
+      { emoji: "🍺", label: "cerveja" },
+      { emoji: "🥤", label: "refri" }
+    ]
+  },
+  "atividades": {
+    label: "⚽ atividades",
+    stickers: [
+      { emoji: "⚽", label: "futebol" },
+      { emoji: "🏀", label: "basquete" },
+      { emoji: "🎯", label: "alvo" },
+      { emoji: "🎮", label: "video game" },
+      { emoji: "🎲", label: "dado" },
+      { emoji: "🎸", label: "guitarra" },
+      { emoji: "🎤", label: "cantar" },
+      { emoji: "🎬", label: "cinema" },
+      { emoji: "📷", label: "foto" },
+      { emoji: "🎨", label: "arte" },
+      { emoji: "🧩", label: "quebra-cabeça" },
+      { emoji: "🚗", label: "carro" },
+      { emoji: "✈️", label: "avião" },
+      { emoji: "🚀", label: "foguete" },
+      { emoji: "🏖️", label: "praia" },
+      { emoji: "🏔️", label: "montanha" },
+      { emoji: "🎆", label: "fogos" },
+      { emoji: "🎄", label: "natal" },
+      { emoji: "🎁", label: "presente" },
+      { emoji: "🏆", label: "troféu" },
+      { emoji: "🥇", label: "medalha" }
+    ]
+  }
+};
 
 const SOUNDS = [
   { id: "risada",   label: "risada 😂",    gen: "laugh" },
@@ -1014,6 +1193,8 @@ let selectedPersonForPin = null;
 let pinBuffer = "";
 let unsubscribeMessages = null;
 let activeReactionPopover = null;
+let pendingPhotoFile = null;
+let pendingPhotoDataUrl = null;
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -1030,7 +1211,7 @@ function showToast(msg){
   setTimeout(() => t.classList.remove('show'), 1800);
 }
 
-/* ============ LOGIN / AUTENTICAÇÃO POR PIN ============ */
+/* ============ LOGIN ============ */
 function renderPersonGrid(){
   const grid = $('#person-grid');
   grid.innerHTML = "";
@@ -1068,7 +1249,6 @@ function openProfilePicker(personId) {
   
   grid.innerHTML = "";
   
-  // Adiciona o emoji atual primeiro (destacado)
   const currentBtn = document.createElement('button');
   currentBtn.textContent = currentEmoji;
   currentBtn.className = 'current-emoji';
@@ -1077,17 +1257,14 @@ function openProfilePicker(personId) {
   });
   grid.appendChild(currentBtn);
   
-  // Adiciona os outros emojis
   PROFILE_EMOJIS.forEach(emoji => {
     if (emoji === currentEmoji) return;
     const btn = document.createElement('button');
     btn.textContent = emoji;
     btn.addEventListener('click', () => {
       saveProfileEmoji(personId, emoji);
-      // Atualiza a UI completamente
       renderPersonGrid();
       renderHeaderAvatars();
-      // Se o usuário atual é essa pessoa, atualiza o currentUser
       if (currentUser && currentUser.id === personId) {
         currentUser.emoji = emoji;
       }
@@ -1179,7 +1356,7 @@ $('#back-link').addEventListener('click', () => {
   pinBuffer = "";
 });
 
-/* ============ ENTRAR NO CHAT ============ */
+/* ============ CHAT ============ */
 function enterChat(){
   showScreen('#screen-chat');
   renderHeaderAvatars();
@@ -1189,7 +1366,6 @@ function enterChat(){
 function renderHeaderAvatars(){
   const wrap = $('#header-avatars');
   wrap.innerHTML = "";
-  // Mostra os primeiros 4 membros da família no header
   FAMILY_BASE.slice(0, 4).forEach(p => {
     const d = document.createElement('div');
     d.className = 'mini-avatar';
@@ -1209,7 +1385,7 @@ $('#logout-btn').addEventListener('click', () => {
   showScreen('#screen-login');
 });
 
-/* ============ MENSAGENS (FIRESTORE) ============ */
+/* ============ MENSAGENS ============ */
 function listenToMessages(){
   const q = query(collection(db, "messages"), orderBy("createdAt", "asc"), limit(200));
   unsubscribeMessages = onSnapshot(q, (snapshot) => {
@@ -1252,6 +1428,9 @@ function renderMessage(msgId, msg, date){
 
   if (msg.type === 'text'){
     bubbleInner = escapeHtml(msg.text || "") + (msg.editedAt ? '<span class="edited-tag"> (editado)</span>' : '');
+  } else if (msg.type === 'photo'){
+    bubbleClass += " photo-bubble";
+    bubbleInner = `<img src="${msg.url}" alt="foto" loading="lazy" style="max-width:100%;">`;
   } else if (msg.type === 'gif' || msg.type === 'meme'){
     bubbleClass += " gif-bubble";
     bubbleInner = `<img src="${msg.url}" alt="${msg.type === 'meme' ? 'meme' : 'GIF'}" loading="lazy">`;
@@ -1396,7 +1575,7 @@ async function toggleReaction(msgId, emoji){
   await updateDoc(msgRef, { reactions });
 }
 
-/* ============ EDITAR MENSAGEM ============ */
+/* ============ EDITAR / DELETAR ============ */
 let editingMessageId = null;
 
 function startEditMessage(msgId, currentText){
@@ -1435,7 +1614,6 @@ async function saveEditedMessage(msgId, newText){
   await updateDoc(msgRef, { text: newText, editedAt: serverTimestamp() });
 }
 
-/* ============ DELETAR MENSAGEM ============ */
 async function deleteMessage(msgId){
   if (editingMessageId === msgId) cancelEditMessage();
   try {
@@ -1456,18 +1634,104 @@ async function sendMessage(payload){
   });
 }
 
-/* ============ COMPOSER: TEXTO ============ */
+/* ============ ENVIAR FOTO ============ */
+const photoInput = $('#photo-input');
+const photoPreviewBar = $('#photo-preview-bar');
+const photoPreviewImg = $('#photo-preview-img');
+const photoPreviewInfo = $('#photo-preview-info');
+const photoPreviewClose = $('#photo-preview-close');
+
+$('#photo-btn').addEventListener('click', () => {
+  photoInput.click();
+});
+
+photoInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  // Verifica se é uma imagem
+  if (!file.type.startsWith('image/')) {
+    showToast('por favor, selecione uma imagem 📷');
+    photoInput.value = '';
+    return;
+  }
+  
+  // Limita tamanho (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('imagem muito grande (máx 5MB)');
+    photoInput.value = '';
+    return;
+  }
+  
+  pendingPhotoFile = file;
+  
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    pendingPhotoDataUrl = ev.target.result;
+    photoPreviewImg.src = pendingPhotoDataUrl;
+    photoPreviewInfo.textContent = file.name;
+    photoPreviewBar.classList.add('active');
+  };
+  reader.readAsDataURL(file);
+});
+
+photoPreviewClose.addEventListener('click', () => {
+  clearPendingPhoto();
+});
+
+function clearPendingPhoto() {
+  pendingPhotoFile = null;
+  pendingPhotoDataUrl = null;
+  photoPreviewBar.classList.remove('active');
+  photoPreviewImg.src = '';
+  photoInput.value = '';
+}
+
+async function sendPhoto() {
+  if (!pendingPhotoDataUrl) return;
+  
+  try {
+    // Envia a foto como mensagem com a URL base64
+    await sendMessage({ 
+      type: 'photo', 
+      url: pendingPhotoDataUrl 
+    });
+    clearPendingPhoto();
+    showToast('foto enviada! 📸');
+  } catch(err) {
+    console.error(err);
+    showToast('erro ao enviar foto 😕');
+  }
+}
+
+/* ============ COMPOSER ============ */
 const textInput = $('#text-input');
 const sendBtn = $('#send-btn');
 
 textInput.addEventListener('input', () => {
-  sendBtn.disabled = textInput.value.trim().length === 0;
+  const hasText = textInput.value.trim().length > 0;
+  const hasPhoto = pendingPhotoDataUrl !== null;
+  sendBtn.disabled = !(hasText || hasPhoto);
   textInput.style.height = 'auto';
   textInput.style.height = Math.min(textInput.scrollHeight, 90) + 'px';
 });
 
 sendBtn.addEventListener('click', async () => {
   const text = textInput.value.trim();
+  
+  // Se tem foto pendente, envia foto primeiro
+  if (pendingPhotoDataUrl) {
+    await sendPhoto();
+    // Se também tem texto, envia depois
+    if (text) {
+      textInput.value = "";
+      sendBtn.disabled = true;
+      textInput.style.height = 'auto';
+      await sendMessage({ type: 'text', text });
+    }
+    return;
+  }
+  
   if (!text) return;
   textInput.value = "";
   sendBtn.disabled = true;
@@ -1488,7 +1752,7 @@ textInput.addEventListener('keydown', (e) => {
   }
 });
 
-/* ============ EMOJI PICKER ============ */
+/* ============ EMOJI ============ */
 const EMOJI_CATEGORIES = [
   {
     id: "carinhas", icon: "😂",
@@ -1554,30 +1818,32 @@ $('#emoji-btn').addEventListener('click', () => {
 $('#close-emoji-sheet').addEventListener('click', () => $('#emoji-sheet-overlay').classList.remove('active'));
 $('#emoji-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'emoji-sheet-overlay') $('#emoji-sheet-overlay').classList.remove('active'); });
 
-/* ============ FIGURINHAS ============ */
-const STICKERS = [
-  { id: "amei",        emoji: "😍", label: "amei!" },
-  { id: "rindo",       emoji: "🤣", label: "morrendo de rir" },
-  { id: "chorando",    emoji: "😭", label: "chorando" },
-  { id: "uau",         emoji: "🤩", label: "uau!" },
-  { id: "bravo",       emoji: "😤", label: "tô bravo" },
-  { id: "festa",       emoji: "🥳", label: "festa!" },
-  { id: "sono",        emoji: "😴", label: "com sono" },
-  { id: "fominha",     emoji: "🤤", label: "com fome" },
-  { id: "beijo",       emoji: "😘", label: "beijo" },
-  { id: "fortao",      emoji: "💪", label: "tamo junto" },
-  { id: "oracao",      emoji: "🙏", label: "vai dar bom" },
-  { id: "comemorando", emoji: "🙌", label: "comemorando" },
-  { id: "pensando",    emoji: "🤔", label: "pensando..." },
-  { id: "surpreso",    emoji: "😱", label: "não acredito" },
-  { id: "coracao",     emoji: "🥰", label: "te amo" },
-];
-
+/* ============ FIGURINHAS (STICKERS) ============ */
 const stickerGrid = $('#sticker-grid');
+const stickerCategories = $('#sticker-categories');
+let activeStickerCategory = Object.keys(STICKER_CATEGORIES)[0];
+
+function renderStickerCategories(){
+  stickerCategories.innerHTML = "";
+  Object.keys(STICKER_CATEGORIES).forEach(catId => {
+    const cat = STICKER_CATEGORIES[catId];
+    const btn = document.createElement('button');
+    btn.className = 'sticker-cat-btn' + (catId === activeStickerCategory ? ' active' : '');
+    btn.textContent = cat.label;
+    btn.addEventListener('click', () => {
+      activeStickerCategory = catId;
+      renderStickerCategories();
+      renderStickerGrid();
+    });
+    stickerCategories.appendChild(btn);
+  });
+}
 
 function renderStickerGrid(){
   stickerGrid.innerHTML = "";
-  STICKERS.forEach(st => {
+  const cat = STICKER_CATEGORIES[activeStickerCategory];
+  if (!cat) return;
+  cat.stickers.forEach(st => {
     const item = document.createElement('div');
     item.className = 'sticker-item';
     item.innerHTML = `<span class="sticker-emoji">${st.emoji}</span><span class="sticker-label">${st.label}</span>`;
@@ -1590,6 +1856,7 @@ function renderStickerGrid(){
 }
 
 $('#sticker-btn').addEventListener('click', () => {
+  renderStickerCategories();
   renderStickerGrid();
   $('#sticker-sheet-overlay').classList.add('active');
 });
