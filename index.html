@@ -105,6 +105,17 @@ body { display: flex; justify-content: center; }
   overflow: hidden;
   box-shadow: 0 0 40px rgba(0,0,0,0.15);
 }
+/* Em telas muito pequenas (< 360px) compactar um pouco */
+@media (max-width: 360px) {
+  .header-shortcut-btn { font-size: 14px; height: 34px; }
+  .hs-label { display: none; }
+  .quick-bar-btn { font-size: 15px; height: 36px; }
+  .qb-label { display: none; }
+  #mini-stopwatch { min-width: 48px; padding: 3px 4px; }
+  #sw-display { font-size: 11px; }
+  .msg-bubble { font-size: 13.5px; }
+  #composer { gap: 4px; padding: 6px 4px; }
+}
 .display-font { font-family: 'Fredoka', sans-serif; }
 
 /* ===== LOADING ===== */
@@ -248,7 +259,15 @@ body { display: flex; justify-content: center; }
   z-index: 10;
   box-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
-.chat-header .avatars-stack { display: flex; }
+.chat-header .avatars-stack {
+  display: flex;
+  flex-shrink: 0;
+}
+.chat-header .avatars-stack .mini-avatar {
+  width: 28px; height: 28px; font-size: 13px;
+  margin-left: -8px;
+}
+.chat-header .avatars-stack .mini-avatar:first-child { margin-left: 0; }
 .chat-header .mini-avatar {
   width: 32px; height: 32px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
@@ -256,8 +275,49 @@ body { display: flex; justify-content: center; }
   border: 2px solid var(--header-bg);
   margin-left: -10px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  position: relative;
+  flex-shrink: 0;
+  transition: transform 0.15s;
 }
 .chat-header .mini-avatar:first-child { margin-left: 0; }
+.chat-header .mini-avatar.is-online::after {
+  content: '';
+  position: absolute;
+  bottom: 0px; right: 0px;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: #22C55E;
+  border: 2px solid var(--header-bg);
+  box-shadow: 0 0 0 1px rgba(34,197,94,0.4);
+}
+.chat-header .mini-avatar.is-typing::after {
+  background: #F59E0B;
+  animation: typingPulse 1s ease-in-out infinite;
+}
+@keyframes typingPulse {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+/* Online strip abaixo do título */
+#online-strip {
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.8);
+  min-height: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 1px;
+}
+#online-strip .online-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #22C55E;
+  flex-shrink: 0;
+  display: inline-block;
+}
 
 .chat-header .title-block { flex: 1; min-width: 0; }
 .chat-header .title-block h1 {
@@ -335,7 +395,7 @@ body { display: flex; justify-content: center; }
 .msg-avatar:hover { transform: scale(1.1); }
 .msg-row.mine .msg-avatar { display: none; }
 
-.msg-stack { display: flex; flex-direction: column; max-width: 78%; position: relative; }
+.msg-stack { display: flex; flex-direction: column; max-width: 78%; position: static; }
 .msg-row.mine .msg-stack { align-items: flex-end; }
 
 .msg-author { font-size: 12px; font-weight: 600; margin: 0 0 2px 12px; }
@@ -353,6 +413,7 @@ body { display: flex; justify-content: center; }
   word-break: break-word;
   position: relative;
   max-width: 100%;
+  overflow: visible;
 }
 .msg-row.mine .msg-bubble {
   border-radius: var(--radius-bubble);
@@ -489,14 +550,16 @@ body { display: flex; justify-content: center; }
 
 /* Popover (long press menu) */
 .reaction-popover {
-  position: absolute; bottom: 100%; margin-bottom: 8px;
+  position: fixed;
   background: var(--surface);
   border-radius: 16px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.12);
   padding: 8px;
   display: flex; flex-direction: column; gap: 4px;
-  z-index: 50; animation: popIn .18s cubic-bezier(.22,.65,.36,1);
-  min-width: max-content;
+  z-index: 500;
+  animation: popIn .18s cubic-bezier(.22,.65,.36,1);
+  min-width: 200px;
+  max-width: 88vw;
   border: 1px solid var(--border);
 }
 @keyframes popIn {
@@ -530,9 +593,8 @@ body { display: flex; justify-content: center; }
 
 /* ===== COMPOSER ===== */
 #composer {
-  display: flex; align-items: flex-end; gap: 6px;
-  padding: 8px 8px;
-  padding-bottom: calc(10px + var(--safe-bottom));
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 8px calc(10px + var(--safe-bottom));
   background: var(--surface);
   border-top: 1px solid var(--border);
   flex-shrink: 0;
@@ -602,45 +664,98 @@ body { display: flex; justify-content: center; }
 
 /* ===== HEADER QUICK SHORTCUTS ===== */
 #header-shortcuts {
-  display: flex; align-items: center;
-  padding: 0 4px;
-  background: rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+  background: var(--brand-dark);
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  gap: 2px;
+  border-bottom: 1px solid rgba(0,0,0,0.15);
 }
 .header-shortcut-btn {
-  flex: 1; min-width: 0; height: 36px;
-  border-radius: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: transparent; border: none;
-  color: rgba(255,255,255,0.88);
-  font-size: clamp(17px, 4.5vw, 22px);
+  flex: 1; min-width: 0;
+  height: 38px;
+  border-radius: 8px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  font-size: 17px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s, color 0.12s;
+  transition: background 0.12s, transform 0.1s;
 }
-.header-shortcut-btn:active { background: rgba(255,255,255,0.16); color: #fff; }
+.header-shortcut-btn i { font-size: 17px; line-height: 1; }
+.hs-label {
+  font-size: 9px; color: rgba(255,255,255,0.75);
+  letter-spacing: 0.01em; line-height: 1;
+  font-family: 'Inter', sans-serif;
+}
+.header-shortcut-btn:active {
+  background: rgba(255,255,255,0.22);
+  transform: scale(0.93);
+}
+
+/* ===== RELÓGIO MINI ===== */
+#mini-clock {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center;
+  gap: 1px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  padding: 4px 8px;
+  min-width: 56px;
+  flex-shrink: 0;
+  cursor: default;
+}
+#clock-time {
+  font-size: 14px; font-weight: 700; color: #fff;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.04em; line-height: 1;
+}
+#clock-date {
+  font-size: 8.5px; color: rgba(255,255,255,0.65);
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.02em; line-height: 1;
+  text-transform: lowercase;
+}
 
 /* ===== QUICK BAR (above composer) ===== */
 #quick-bar {
   display: flex; align-items: center;
-  padding: 2px 8px 0;
+  padding: 4px 6px;
   background: var(--surface);
   border-top: 1px solid var(--border);
   flex-shrink: 0;
+  gap: 2px;
 }
 .quick-bar-btn {
-  flex: 1; min-width: 0; height: 40px;
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  background: transparent; border: none;
+  flex: 1; min-width: 0;
+  height: 40px;
+  border-radius: 8px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   color: var(--text-2);
-  font-size: clamp(18px, 4.5vw, 22px);
+  font-size: 17px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.12s, color 0.12s;
+  transition: background 0.12s, color 0.12s, transform 0.1s;
 }
-.quick-bar-btn:active { background: var(--brand-pale); color: var(--brand-light); }
+.quick-bar-btn i { font-size: 17px; line-height: 1; }
+.qb-label {
+  font-size: 9px; color: var(--text-3);
+  letter-spacing: 0.01em; line-height: 1;
+  font-family: 'Inter', sans-serif;
+}
+.quick-bar-btn:active {
+  background: var(--brand-pale);
+  color: var(--brand-light);
+  transform: scale(0.93);
+}
 
 
 /* Action bars (reply / edit) */
@@ -926,18 +1041,18 @@ body { display: flex; justify-content: center; }
 
 /* Delete confirm toast-style inline */
 .delete-confirm-pop {
-  position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-  margin-bottom: 8px;
+  position: fixed;
   background: #1e2a30;
   color: #fff;
   border-radius: 14px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   font-size: 13px;
-  display: flex; align-items: center; gap: 8px;
-  z-index: 60;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  display: flex; align-items: center; gap: 10px;
+  z-index: 600;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   white-space: nowrap;
   animation: popIn .18s cubic-bezier(.22,.65,.36,1);
+  max-width: 90vw;
 }
 .delete-confirm-pop button {
   border: none; border-radius: 8px; padding: 4px 10px;
@@ -985,20 +1100,24 @@ body { display: flex; justify-content: center; }
       <div class="avatars-stack" id="header-avatars"></div>
       <div class="title-block">
         <h1 class="display-font">Família Conecta</h1>
-        <p class="status" id="typing-status"></p>
+        <div id="online-strip"></div>
       </div>
       <button class="icon-btn" id="dark-mode-btn" aria-label="Modo escuro"><i class="ti ti-moon"></i></button>
       <button class="icon-btn" id="wallpaper-btn" aria-label="Papel de parede"><i class="ti ti-photo"></i></button>
       <button class="icon-btn" id="logout-btn" aria-label="Sair"><i class="ti ti-logout"></i></button>
     </div>
 
-    <!-- Header shortcuts bar -->
+    <!-- Header shortcuts bar + cronômetro -->
     <div id="header-shortcuts">
-      <button class="header-shortcut-btn" id="hs-emoji-btn" aria-label="Emoji"><i class="ti ti-mood-smile"></i></button>
-      <button class="header-shortcut-btn" id="hs-sticker-btn" aria-label="Figurinha"><i class="ti ti-stack-2"></i></button>
-      <button class="header-shortcut-btn" id="hs-gif-btn" aria-label="GIF"><i class="ti ti-gif"></i></button>
-      <button class="header-shortcut-btn" id="hs-sound-btn" aria-label="Som"><i class="ti ti-volume"></i></button>
-      <button class="header-shortcut-btn" id="hs-attach-btn" aria-label="Anexo"><i class="ti ti-clip"></i></button>
+      <button class="header-shortcut-btn" id="hs-emoji-btn" aria-label="Emoji"><i class="ti ti-mood-smile"></i><span class="hs-label">emoji</span></button>
+      <button class="header-shortcut-btn" id="hs-sticker-btn" aria-label="Figurinha"><i class="ti ti-stack-2"></i><span class="hs-label">fig.</span></button>
+      <button class="header-shortcut-btn" id="hs-gif-btn" aria-label="GIF"><i class="ti ti-gif"></i><span class="hs-label">GIF</span></button>
+      <button class="header-shortcut-btn" id="hs-sound-btn" aria-label="Som"><i class="ti ti-volume"></i><span class="hs-label">som</span></button>
+      <button class="header-shortcut-btn" id="hs-attach-btn" aria-label="Anexo"><i class="ti ti-clip"></i><span class="hs-label">anexo</span></button>
+      <div id="mini-clock">
+        <span id="clock-time">--:--</span>
+        <span id="clock-date"></span>
+      </div>
     </div>
 
     <div id="messages-container"></div>
@@ -1025,11 +1144,11 @@ body { display: flex; justify-content: center; }
 
     <!-- Quick action bar (above composer) -->
     <div id="quick-bar">
-      <button class="quick-bar-btn" id="qb-emoji-btn" aria-label="Emoji"><i class="ti ti-mood-smile"></i></button>
-      <button class="quick-bar-btn" id="qb-sticker-btn" aria-label="Figurinha"><i class="ti ti-stack-2"></i></button>
-      <button class="quick-bar-btn" id="qb-gif-btn" aria-label="GIF"><i class="ti ti-gif"></i></button>
-      <button class="quick-bar-btn" id="qb-sound-btn" aria-label="Som"><i class="ti ti-volume"></i></button>
-      <button class="quick-bar-btn" id="qb-attach-btn" aria-label="Anexo"><i class="ti ti-clip"></i></button>
+      <button class="quick-bar-btn" id="qb-emoji-btn" aria-label="Emoji"><i class="ti ti-mood-smile"></i><span class="qb-label">emoji</span></button>
+      <button class="quick-bar-btn" id="qb-sticker-btn" aria-label="Figurinha"><i class="ti ti-stack-2"></i><span class="qb-label">fig.</span></button>
+      <button class="quick-bar-btn" id="qb-gif-btn" aria-label="GIF"><i class="ti ti-gif"></i><span class="qb-label">GIF</span></button>
+      <button class="quick-bar-btn" id="qb-sound-btn" aria-label="Som"><i class="ti ti-volume"></i><span class="qb-label">som</span></button>
+      <button class="quick-bar-btn" id="qb-attach-btn" aria-label="Anexo"><i class="ti ti-clip"></i><span class="qb-label">anexo</span></button>
     </div>
 
     <div id="composer">
@@ -1249,7 +1368,18 @@ $('#back-link').addEventListener('click',()=>{ $('#pin-section').classList.remov
 
 // ============ CHAT ============
 function enterChat(){ showScreen('#screen-chat'); renderHeaderAvatars(); listenToMessages(); updateStatus(true); setInterval(()=>updateStatus(true), 10000); }
-function renderHeaderAvatars(){ const wrap=$('#header-avatars'); wrap.innerHTML=""; FAMILY_BASE.slice(0,4).forEach(p=>{ const d=document.createElement('div'); d.className='mini-avatar'; d.style.background=p.color+'33'; d.textContent=getPersonEmoji(p.id); wrap.appendChild(d); }); }
+function renderHeaderAvatars(){
+  const wrap=$('#header-avatars'); wrap.innerHTML="";
+  FAMILY_BASE.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='mini-avatar';
+    d.dataset.personId = p.id;
+    d.style.background = p.color+'33';
+    d.textContent = getPersonEmoji(p.id);
+    d.title = p.name;
+    wrap.appendChild(d);
+  });
+}
 $('#logout-btn').addEventListener('click',()=>{ if(unsubscribeMessages)unsubscribeMessages(); currentUser=null; selectedPersonForPin=null; pinBuffer=""; $('#pin-section').classList.remove('active'); $('#person-grid').style.display='grid'; showScreen('#screen-login'); });
 
 // Status
@@ -1270,24 +1400,40 @@ async function updateTyping(isTyping){
 
 function listenTypingStatus(){
   onSnapshot(collection(db, "status"), (snapshot) => {
-    const typingUsers = [];
-    const onlineUsers = [];
+    const typingIds = [];
+    const onlineIds = [];
+
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
-      if(data.online && data.typing && data.name && data.name !== currentUser?.name){
-        typingUsers.push(data.name);
-      }
-      if(data.online && data.name && data.name !== currentUser?.name){
-        onlineUsers.push(data.name);
+      const id = docSnap.id;
+      if(id === currentUser?.id) return; // ignora o próprio usuário
+      // Considera online se lastSeen nos últimos 30s
+      const lastSeen = data.lastSeen?.toDate?.() || null;
+      const isRecent = lastSeen && (Date.now() - lastSeen.getTime()) < 30000;
+      if(data.online && isRecent){
+        onlineIds.push(id);
+        if(data.typing) typingIds.push(id);
       }
     });
-    const statusEl = $('#typing-status');
-    if(typingUsers.length > 0){
-      statusEl.textContent = `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'estão' : 'está'} digitando...`;
-    } else if(onlineUsers.length > 0){
-      statusEl.textContent = `${onlineUsers.join(', ')} ${onlineUsers.length > 1 ? 'estão' : 'está'} online`;
+
+    // Atualizar indicadores nos mini-avatares do header
+    $$('.mini-avatar[data-person-id]').forEach(av => {
+      const pid = av.dataset.personId;
+      av.classList.toggle('is-online', onlineIds.includes(pid));
+      av.classList.toggle('is-typing', typingIds.includes(pid));
+    });
+
+    // Atualizar online-strip
+    const strip = $('#online-strip');
+    if(!strip) return;
+    if(typingIds.length > 0){
+      const names = typingIds.map(id => getPersonName(id));
+      strip.innerHTML = `<span style="color:#F59E0B;font-size:11px;">●</span> ${names.join(', ')} ${names.length > 1 ? 'estão' : 'está'} digitando...`;
+    } else if(onlineIds.length > 0){
+      const names = onlineIds.map(id => getPersonName(id));
+      strip.innerHTML = `<span class="online-dot"></span> ${names.join(', ')} online`;
     } else {
-      statusEl.textContent = '';
+      strip.innerHTML = '';
     }
   });
 }
@@ -1578,6 +1724,19 @@ function renderReactions(el, reactions, msgId){
 function openReactionPopover(anchorEl, msgId, msg, isMine){
   closeReactionPopover();
   const pop = document.createElement('div'); pop.className = 'reaction-popover';
+  // Posição: calculada a partir do bounding rect da bolha
+  const rect = anchorEl.getBoundingClientRect();
+  const appRect = document.getElementById('app').getBoundingClientRect();
+  const popWidth = 220;
+  let left = rect.left - appRect.left;
+  let top = rect.top - appRect.top - 8; // acima da bolha
+  // Garante que não saia da tela
+  if (left + popWidth > appRect.width - 8) left = appRect.width - popWidth - 8;
+  if (left < 8) left = 8;
+  pop.style.left = left + 'px';
+  pop.style.top = ''; // calculado depois do append
+  pop._anchorRect = rect;
+  pop._appRect = appRect;
   const emojiRow = document.createElement('div'); emojiRow.className = 'popover-emoji-row';
   QUICK_EMOJIS.forEach(emoji => {
     const btn = document.createElement('button'); btn.textContent = emoji;
@@ -1612,20 +1771,47 @@ function openReactionPopover(anchorEl, msgId, msg, isMine){
       confirmPop.innerHTML = `<span>excluir mensagem?</span><button class="dc-cancel">cancelar</button><button class="dc-confirm">excluir</button>`;
       confirmPop.querySelector('.dc-cancel').addEventListener('click', (ev) => { ev.stopPropagation(); closeReactionPopover(); });
       confirmPop.querySelector('.dc-confirm').addEventListener('click', (ev) => { ev.stopPropagation(); closeReactionPopover(); deleteMessage(msgId); });
-      // Fecha popover normal e abre confirmação na própria bolha
       const bubbleAnchor = document.querySelector(`[data-msg-id="${msgId}"]`);
       closeReactionPopover();
-      if(bubbleAnchor){
-        bubbleAnchor.style.position = 'relative';
-        bubbleAnchor.appendChild(confirmPop);
-        activeReactionPopover = confirmPop;
-        setTimeout(() => { document.addEventListener('click', closeReactionPopoverOnce, { once: true }); }, 50);
-      }
+      const appEl = document.getElementById('app');
+      appEl.appendChild(confirmPop);
+      activeReactionPopover = confirmPop;
+      // Posicionar no centro da tela
+      requestAnimationFrame(() => {
+        if (!confirmPop.isConnected) return;
+        const appRect = appEl.getBoundingClientRect();
+        const rect = bubbleAnchor ? bubbleAnchor.getBoundingClientRect() : null;
+        const popW = confirmPop.offsetWidth;
+        const popH = confirmPop.offsetHeight;
+        const centerX = appRect.left + appRect.width / 2 - appRect.left;
+        let top = rect ? (rect.top - appRect.top - popH - 10) : (appRect.height / 2 - popH / 2);
+        if (top < 8) top = rect ? (rect.bottom - appRect.top + 8) : 8;
+        confirmPop.style.left = Math.max(8, centerX - popW/2) + 'px';
+        confirmPop.style.top = top + 'px';
+      });
+      setTimeout(() => { document.addEventListener('click', closeReactionPopoverOnce, { once: true }); }, 50);
     });
     actionsRow.appendChild(deleteBtn);
   }
   pop.appendChild(actionsRow);
-  anchorEl.style.position = 'relative'; anchorEl.appendChild(pop); activeReactionPopover = pop;
+  const appEl = document.getElementById('app');
+  appEl.appendChild(pop);
+  activeReactionPopover = pop;
+  // Calcular posição vertical após render (para saber altura do pop)
+  requestAnimationFrame(() => {
+    if (!pop.isConnected) return;
+    const rect = pop._anchorRect;
+    const appRect = pop._appRect;
+    const popH = pop.offsetHeight;
+    const popW = pop.offsetWidth;
+    let top = (rect.top - appRect.top) - popH - 8;
+    if (top < 8) top = (rect.bottom - appRect.top) + 8; // abre abaixo se não cabe em cima
+    let left = rect.left - appRect.left;
+    if (left + popW > appRect.width - 8) left = appRect.width - popW - 8;
+    if (left < 8) left = 8;
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+  });
   setTimeout(() => { document.addEventListener('click', closeReactionPopoverOnce, { once: true }); }, 50);
 }
 function closeReactionPopoverOnce(e){ closeReactionPopover(); }
@@ -2506,6 +2692,29 @@ function tone(ctx,{freq,start,dur,type='sine',gain=0.3,slideTo=null}){ const osc
 function filteredNoise(ctx,{start,dur,freq=1000,q=1,gain=0.3,type='bandpass'}){ const noise=ctx.createBufferSource(); noise.buffer=makeNoiseBuffer(ctx,dur); const filter=ctx.createBiquadFilter(); filter.type=type; filter.frequency.value=freq; filter.Q.value=q; const g=ctx.createGain(); g.gain.setValueAtTime(0,ctx.currentTime+start); g.gain.linearRampToValueAtTime(gain,ctx.currentTime+start+0.02); g.gain.linearRampToValueAtTime(0,ctx.currentTime+start+dur); noise.connect(filter); filter.connect(g); g.connect(ctx.destination); noise.start(ctx.currentTime+start); noise.stop(ctx.currentTime+start+dur+0.02); }
 const SOUND_GENERATORS={ laugh(ctx){ [0,0.16,0.32,0.48].forEach((t,i)=>{ tone(ctx,{freq:380+i*12,start:t,dur:0.13,type:'triangle',gain:0.28,slideTo:280+i*12}); }); }, applause(ctx){ for(let i=0;i<14;i++){ filteredNoise(ctx,{start:Math.random()*0.9,dur:0.05+Math.random()*0.05,freq:2200+Math.random()*1500,q:0.7,gain:0.22}); } }, tada(ctx){ [261.6,329.6,392.0,523.3].forEach((f,i)=>{ tone(ctx,{freq:f,start:i*0.09,dur:0.22,type:'square',gain:0.18}); }); filteredNoise(ctx,{start:0.32,dur:0.4,freq:6000,q:0.5,gain:0.12,type:'highpass'}); }, dog(ctx){ [0,0.22].forEach(t=>{ tone(ctx,{freq:180,start:t,dur:0.12,type:'sawtooth',gain:0.3,slideTo:110}); filteredNoise(ctx,{start:t,dur:0.1,freq:600,q:1.2,gain:0.15}); }); }, cat(ctx){ tone(ctx,{freq:520,start:0,dur:0.35,type:'sawtooth',gain:0.22,slideTo:760}); tone(ctx,{freq:760,start:0.32,dur:0.25,type:'sawtooth',gain:0.18,slideTo:480}); }, bird(ctx){ [0,0.1,0.22,0.36].forEach((t,i)=>{ tone(ctx,{freq:2200+i*300,start:t,dur:0.07,type:'sine',gain:0.18,slideTo:3000+i*300}); }); }, rain(ctx){ filteredNoise(ctx,{start:0,dur:1.2,freq:3500,q:0.4,gain:0.1,type:'bandpass'}); for(let i=0;i<20;i++){ filteredNoise(ctx,{start:Math.random()*1.1,dur:0.04,freq:4000+Math.random()*2000,q:2,gain:0.06}); } }, honk(ctx){ tone(ctx,{freq:220,start:0,dur:0.45,type:'sawtooth',gain:0.28}); } };
 function playGeneratedSound(genId){ try{ const ctx=getAudioCtx(); const fn=SOUND_GENERATORS[genId]; if(fn)fn(ctx); }catch(e){ console.error(e); } }
+
+// ============ RELÓGIO ============
+(function(){
+  const clockTime = document.getElementById('clock-time');
+  const clockDate = document.getElementById('clock-date');
+  const DAYS = ['dom','seg','ter','qua','qui','sex','sáb'];
+  const MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+  function tickClock(){
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    clockTime.textContent = h + ':' + m;
+    const day = DAYS[now.getDay()];
+    const d = now.getDate();
+    const mon = MONTHS[now.getMonth()];
+    clockDate.textContent = day + ' ' + d + '/' + mon;
+    // Agendar próxima atualização no início do próximo minuto
+    const msToNextMin = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+    setTimeout(tickClock, msToNextMin);
+  }
+  tickClock();
+})();
 
 // ============ PWA ============
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
