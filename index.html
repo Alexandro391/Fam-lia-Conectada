@@ -296,8 +296,10 @@
   #text-input {
     flex: 1; min-width: 90px; border: 1px solid var(--border); background: var(--input-bg);
     border-radius: 20px; padding: 10px 16px; font-size: 14.5px; font-family: 'Nunito', sans-serif;
-    color: var(--text); outline: none; resize: none; max-height: 90px;
+    color: var(--text); outline: none; resize: none; max-height: 140px; line-height: 1.35;
+    overflow-y: auto; transition: border-radius 0.15s;
   }
+  #text-input.multiline { border-radius: 16px; }
   #send-btn {
     width: 38px; height: 38px; border-radius: 50%; background: #0F6E56; border: none;
     display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
@@ -339,6 +341,12 @@
   .sheet-header h2 { font-size: 15px; font-weight: 600; margin: 0; color: var(--text); }
   .sheet-header .close-btn { background: none; border: none; font-size: 18px; color: var(--text-soft); cursor: pointer; }
 
+  /* Plus menu */
+  #plus-menu-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; padding: 4px 16px 26px; }
+  .plus-menu-item { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; font-size: 12px; color: var(--text-soft); font-family: 'Nunito', sans-serif; }
+  .plus-menu-item .plus-icon { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 22px; transition: transform .12s; }
+  .plus-menu-item:active .plus-icon { transform: scale(0.92); }
+
   /* Stickers */
   .sticker-categories { display: flex; gap: 6px; padding: 0 16px 10px; overflow-x: auto; }
   .sticker-categories::-webkit-scrollbar { display: none; }
@@ -359,10 +367,13 @@
   #gif-results img { width: 100%; border-radius: 12px; cursor: pointer; display: block; background: var(--bg); }
   #gif-results .gif-hint { grid-column: 1/-1; text-align: center; color: var(--text-hint); font-size: 13px; padding: 20px 0; }
 
-  #wallpaper-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; padding: 0 16px 16px; }
-  .wallpaper-swatch { aspect-ratio: 1; border-radius: 14px; border: 2px solid var(--border); cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center; }
+  #wallpaper-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; padding: 0 16px 16px; }
+  .wallpaper-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .wallpaper-label { font-size: 10px; color: var(--text-hint); text-align: center; line-height: 1.1; }
+  .wallpaper-swatch { width: 100%; aspect-ratio: 1; border-radius: 14px; border: 2px solid var(--border); cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center; }
   .wallpaper-swatch.active { border-color: #0F6E56; }
-  .wallpaper-swatch.active::after { content: "\2713"; color: #fff; font-size: 18px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+  .wallpaper-swatch.active::after { content: "\2713"; position: absolute; top: 3px; right: 5px; color: #fff; font-size: 13px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+  .wallpaper-swatch .wallpaper-icon { font-size: 20px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
 
   .toast { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; padding: 9px 18px; border-radius: 20px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity .25s; pointer-events: none; white-space: nowrap; }
   .toast.show { opacity: 1; }
@@ -429,23 +440,26 @@
 
     <div id="composer">
       <button class="composer-icon-btn" id="emoji-btn" aria-label="Emoji"><i class="ti ti-mood-smile"></i></button>
-      <button class="composer-icon-btn" id="sticker-btn" aria-label="Figurinhas"><i class="ti ti-stack-2"></i></button>
-      <button class="composer-icon-btn" id="open-soundboard" aria-label="Sons"><i class="ti ti-volume"></i></button>
-      <button class="composer-icon-btn" id="gif-btn" aria-label="Enviar GIF"><i class="ti ti-gif"></i></button>
-      <button class="composer-icon-btn" id="attach-btn" aria-label="Anexar"><i class="ti ti-clip"></i></button>
+      <button class="composer-icon-btn" id="plus-btn" aria-label="Mais opções"><i class="ti ti-plus"></i></button>
       <input type="file" id="attach-input" accept="image/*,video/*" style="display:none;">
-      <button class="composer-icon-btn" id="mic-btn" aria-label="Áudio"><i class="ti ti-microphone"></i></button>
       <textarea id="text-input" rows="1" placeholder="escreva algo..."></textarea>
+      <button class="composer-icon-btn" id="mic-btn" aria-label="Áudio"><i class="ti ti-microphone"></i></button>
       <button id="send-btn" disabled aria-label="Enviar"><i class="ti ti-send"></i></button>
     </div>
   </div>
 
   <!-- SHEETS -->
+  <div class="sheet-overlay" id="plus-sheet-overlay"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-header"><h2>enviar</h2><button class="close-btn" id="close-plus-sheet"><i class="ti ti-x"></i></button></div><div id="plus-menu-grid">
+    <button class="plus-menu-item" id="plus-attach"><span class="plus-icon" style="background:#6C5CE7;"><i class="ti ti-clip"></i></span><span>anexo</span></button>
+    <button class="plus-menu-item" id="plus-sticker"><span class="plus-icon" style="background:#0F6E56;"><i class="ti ti-stack-2"></i></span><span>figurinha</span></button>
+    <button class="plus-menu-item" id="plus-gif"><span class="plus-icon" style="background:#D85A30;"><i class="ti ti-gif"></i></span><span>GIF</span></button>
+    <button class="plus-menu-item" id="plus-sound"><span class="plus-icon" style="background:#2E86DE;"><i class="ti ti-volume"></i></span><span>som</span></button>
+  </div></div></div>
   <div class="sheet-overlay" id="emoji-sheet-overlay"><div class="sheet" style="max-height:75vh;"><div class="sheet-handle"></div><div class="sheet-header"><h2>emojis</h2><button class="close-btn" id="close-emoji-sheet"><i class="ti ti-x"></i></button></div><div id="emoji-category-tabs"></div><div id="emoji-grid"></div></div></div>
   <div class="sheet-overlay" id="sticker-sheet-overlay"><div class="sheet" style="max-height:70vh;"><div class="sheet-handle"></div><div class="sheet-header"><h2>figurinhas</h2><button class="close-btn" id="close-sticker-sheet"><i class="ti ti-x"></i></button></div><div class="sticker-categories" id="sticker-categories"></div><div id="sticker-grid"></div></div></div>
   <div class="sheet-overlay" id="gif-sheet-overlay"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-header"><h2 id="gif-sheet-title">escolher um GIF</h2><button class="close-btn" id="close-gif-sheet"><i class="ti ti-x"></i></button></div><div id="gif-mode-tabs"><button class="gif-mode-tab active" data-mode="gif">GIFs</button><button class="gif-mode-tab" data-mode="meme">memes</button></div><input type="text" id="gif-search" placeholder="buscar GIF..."><div id="gif-results"><p class="gif-hint">digite algo para buscar 🔍</p></div></div></div>
   <div class="sheet-overlay" id="sound-sheet-overlay"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-header"><h2>soundboard</h2><button class="close-btn" id="close-sound-sheet"><i class="ti ti-x"></i></button></div><div id="sound-results" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 16px 16px;"></div></div></div>
-  <div class="sheet-overlay" id="wallpaper-sheet-overlay"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-header"><h2>papel de parede</h2><button class="close-btn" id="close-wallpaper-sheet"><i class="ti ti-x"></i></button></div><p style="font-size:12.5px; color:var(--text-hint); margin:0 16px 12px;">só muda a tela pra você</p><div id="wallpaper-grid"></div></div></div>
+  <div class="sheet-overlay" id="wallpaper-sheet-overlay"><div class="sheet" style="max-height:72vh;"><div class="sheet-handle"></div><div class="sheet-header"><h2>papel de parede</h2><button class="close-btn" id="close-wallpaper-sheet"><i class="ti ti-x"></i></button></div><p style="font-size:12.5px; color:var(--text-hint); margin:0 16px 12px;">só muda a tela pra você</p><div id="wallpaper-grid" style="overflow-y:auto;"></div></div></div>
   <div class="sheet-overlay" id="profile-sheet-overlay"><div class="sheet" style="max-height:60vh;"><div class="sheet-handle"></div><div class="sheet-header"><h2>escolha seu emoji</h2><button class="close-btn" id="close-profile-sheet"><i class="ti ti-x"></i></button></div><div style="padding:0 16px 8px; display:flex; align-items:center; gap:12px; justify-content:center;"><span style="font-size:14px; color:var(--text-soft);">seu atual:</span><span id="profile-current-preview" style="font-size:32px; background:var(--bg); padding:4px 16px; border-radius:12px;"></span></div><div class="profile-emoji-grid" id="profile-emoji-grid"></div></div></div>
 
   <div class="toast" id="toast"></div>
@@ -967,7 +981,8 @@ textInput.addEventListener('input', () => {
   const hasText = textInput.value.trim().length > 0;
   const hasMedia = pendingMediaDataUrl !== null;
   sendBtn.disabled = !(hasText || hasMedia || isRecording);
-  textInput.style.height = 'auto'; textInput.style.height = Math.min(textInput.scrollHeight, 90) + 'px';
+  textInput.style.height = 'auto'; textInput.style.height = Math.min(textInput.scrollHeight, 140) + 'px';
+  textInput.classList.toggle('multiline', textInput.scrollHeight > 44);
   clearTimeout(typingTimeout);
   if(hasText){ updateTyping(true); }
   typingTimeout = setTimeout(() => updateTyping(false), 2000);
@@ -981,11 +996,11 @@ sendBtn.addEventListener('click', async () => {
     const isVideo = pendingMediaFile && pendingMediaFile.type.startsWith('video/');
     await sendMessage({ type: isVideo ? 'video' : 'photo', url: pendingMediaDataUrl });
     clearPendingMedia();
-    if(text){ textInput.value = ""; sendBtn.disabled = true; textInput.style.height = 'auto'; await sendMessage({ type: 'text', text }); }
+    if(text){ textInput.value = ""; sendBtn.disabled = true; textInput.style.height = 'auto'; textInput.classList.remove('multiline'); await sendMessage({ type: 'text', text }); }
     return;
   }
   if(!text)return;
-  textInput.value = ""; sendBtn.disabled = true; textInput.style.height = 'auto';
+  textInput.value = ""; sendBtn.disabled = true; textInput.style.height = 'auto'; textInput.classList.remove('multiline');
   if(editingMessageId){ const id=editingMessageId; cancelEditMessage(); await saveEditedMessage(id, text); }
   else { await sendMessage({ type: 'text', text }); }
 });
@@ -996,7 +1011,7 @@ const attachInput = $('#attach-input'); const mediaPreviewBar = $('#media-previe
 const mediaPreviewImg = $('#media-preview-img'); const mediaPreviewVideo = $('#media-preview-video');
 const mediaPreviewInfo = $('#media-preview-info'); const mediaPreviewClose = $('#media-preview-close');
 
-$('#attach-btn').addEventListener('click', () => attachInput.click());
+$('#plus-attach').addEventListener('click', () => { $('#plus-sheet-overlay').classList.remove('active'); attachInput.click(); });
 attachInput.addEventListener('change', (e) => {
   const file = e.target.files[0]; if(!file)return;
   if(!file.type.startsWith('image/') && !file.type.startsWith('video/')){ showToast('selecione imagem ou vídeo 📎'); attachInput.value=''; return; }
@@ -1057,6 +1072,15 @@ function stopRecording(){
   }
 }
 
+// ============ MENU + ============
+const plusSheetOverlay = $('#plus-sheet-overlay');
+$('#plus-btn').addEventListener('click', () => plusSheetOverlay.classList.add('active'));
+$('#close-plus-sheet').addEventListener('click', () => plusSheetOverlay.classList.remove('active'));
+plusSheetOverlay.addEventListener('click', (e) => { if(e.target === plusSheetOverlay) plusSheetOverlay.classList.remove('active'); });
+$('#plus-sticker').addEventListener('click', () => { plusSheetOverlay.classList.remove('active'); renderStickerCategories(); renderStickerGrid(); $('#sticker-sheet-overlay').classList.add('active'); });
+$('#plus-gif').addEventListener('click', () => { plusSheetOverlay.classList.remove('active'); gifMode='gif'; $$('.gif-mode-tab').forEach(t=>t.classList.toggle('active',t.dataset.mode==='gif')); gifSheetTitle.textContent=GIF_MODE_LABELS.gif.title; gifSearch.placeholder=GIF_MODE_LABELS.gif.placeholder; gifSheetOverlay.classList.add('active'); gifSearch.value=""; gifResults.innerHTML='<p class="gif-hint">digite algo para buscar 🔍</p>'; setTimeout(()=>gifSearch.focus(),100); });
+$('#plus-sound').addEventListener('click', () => { plusSheetOverlay.classList.remove('active'); renderSoundboard(); $('#sound-sheet-overlay').classList.add('active'); });
+
 // ============ EMOJI ============
 const EMOJI_CATEGORIES = [
   { id:"carinhas", icon:"😂", emojis:["😀","😁","😂","🤣","😊","😍","🥰","😘","😜","🤪","😎","🥳","🤩","😇","🙃","😉","😏","😒","😢","😭","😡","🤬","😱","😴","🤔","🙄","😬","🥹","🤯","🫠","😮","😳","🥺","😤","🤫","🤭","😋","😛","🤤","🤗"] },
@@ -1102,7 +1126,6 @@ function renderStickerGrid(){
     stickerGrid.appendChild(item);
   });
 }
-$('#sticker-btn').addEventListener('click',()=>{ renderStickerCategories(); renderStickerGrid(); $('#sticker-sheet-overlay').classList.add('active'); });
 $('#close-sticker-sheet').addEventListener('click',()=>$('#sticker-sheet-overlay').classList.remove('active'));
 $('#sticker-sheet-overlay').addEventListener('click',(e)=>{ if(e.target.id==='sticker-sheet-overlay')$('#sticker-sheet-overlay').classList.remove('active'); });
 
@@ -1112,7 +1135,6 @@ const GIF_MODE_LABELS={ gif:{title:"escolher um GIF", placeholder:"buscar GIF...
 $$('.gif-mode-tab').forEach(tab=>{
   tab.addEventListener('click',()=>{ gifMode=tab.dataset.mode; $$('.gif-mode-tab').forEach(t=>t.classList.toggle('active',t===tab)); gifSheetTitle.textContent=GIF_MODE_LABELS[gifMode].title; gifSearch.placeholder=GIF_MODE_LABELS[gifMode].placeholder; gifSearch.value=""; gifResults.innerHTML='<p class="gif-hint">digite algo para buscar 🔍</p>'; if(gifMode==='meme')searchGifs('meme','meme'); });
 });
-$('#gif-btn').addEventListener('click',()=>{ gifMode='gif'; $$('.gif-mode-tab').forEach(t=>t.classList.toggle('active',t.dataset.mode==='gif')); gifSheetTitle.textContent=GIF_MODE_LABELS.gif.title; gifSearch.placeholder=GIF_MODE_LABELS.gif.placeholder; gifSheetOverlay.classList.add('active'); gifSearch.value=""; gifResults.innerHTML='<p class="gif-hint">digite algo para buscar 🔍</p>'; setTimeout(()=>gifSearch.focus(),100); });
 $('#close-gif-sheet').addEventListener('click',()=>gifSheetOverlay.classList.remove('active'));
 gifSheetOverlay.addEventListener('click',(e)=>{ if(e.target===gifSheetOverlay)gifSheetOverlay.classList.remove('active'); });
 gifSearch.addEventListener('input',()=>{
@@ -1148,21 +1170,36 @@ function renderSoundboard(){
     soundResults.appendChild(btn);
   });
 }
-$('#open-soundboard').addEventListener('click',()=>{ renderSoundboard(); soundSheetOverlay.classList.add('active'); });
 $('#close-sound-sheet').addEventListener('click',()=>soundSheetOverlay.classList.remove('active'));
 soundSheetOverlay.addEventListener('click',(e)=>{ if(e.target===soundSheetOverlay)soundSheetOverlay.classList.remove('active'); });
 
 // ============ WALLPAPER ============
-const WALLPAPERS=[ {id:"padrao",label:"padrão",color:"#FFFBF6"},{id:"creme",label:"creme",color:"#FBF3E7"},{id:"menta",label:"menta",color:"#E1F5EE"},{id:"ceu",label:"céu",color:"#E6F1FB"},{id:"lilas",label:"lilás",color:"#EEEDFE"},{id:"rosa",label:"rosa",color:"#FBEAF0"},{id:"amarelo",label:"amarelo",color:"#FAEEDA"},{id:"pessego",label:"pêssego",color:"#FAECE7"},{id:"cinza",label:"cinza claro",color:"#F1EFE8"},{id:"escuro",label:"escuro",color:"#1C2540"} ];
+const WALLPAPERS=[
+  {id:"padrao",label:"padrão",bg:"#FFFBF6"},
+  {id:"menta",label:"menta",bg:"#E1F5EE"},
+  {id:"ceu",label:"céu",bg:"#E6F1FB"},
+  {id:"rosa",label:"rosa",bg:"#FBEAF0"},
+  {id:"escuro",label:"escuro",bg:"#1C2540"},
+  {id:"vasco",label:"Vasco",bg:"linear-gradient(160deg, #0B0B0B 0%, #0B0B0B 48%, #FFFFFF 48%, #FFFFFF 52%, #0B0B0B 52%, #0B0B0B 100%)",icon:"⚓"},
+  {id:"stranger",label:"Stranger Things",bg:"linear-gradient(135deg, #0a0a0f 0%, #1a0510 40%, #3d0a1f 70%, #b3122e 100%)",icon:"💡"},
+  {id:"batman",label:"Batman",bg:"linear-gradient(160deg, #05060a 0%, #11131a 55%, #1c2030 100%)",icon:"🦇"},
+  {id:"superman",label:"Superman",bg:"linear-gradient(150deg, #001a4d 0%, #003f9e 45%, #d62828 100%)",icon:"🦸"},
+  {id:"herois-fracos",label:"Liga dos Fracos",bg:"linear-gradient(135deg, #6b6f73 0%, #9aa0a6 45%, #c9c9c9 100%)",icon:"🦸‍♂️"},
+  {id:"biblico",label:"Bíblico",bg:"linear-gradient(160deg, #2b1d0e 0%, #5a3d1a 45%, #c9a14a 100%)",icon:"✝️"},
+];
 function getSavedWallpaperId(){ try{ return localStorage.getItem('familia_wallpaper')||'padrao'; }catch(e){return 'padrao';} }
-function applyWallpaper(id){ const wp=WALLPAPERS.find(w=>w.id===id)||WALLPAPERS[0]; document.documentElement.style.setProperty('--bg-chat', wp.color); try{ localStorage.setItem('familia_wallpaper', wp.id); }catch(e){} }
+function applyWallpaper(id){ const wp=WALLPAPERS.find(w=>w.id===id)||WALLPAPERS[0]; document.documentElement.style.setProperty('--bg-chat', wp.bg); try{ localStorage.setItem('familia_wallpaper', wp.id); }catch(e){} }
 function renderWallpaperGrid(){
   const grid=$('#wallpaper-grid'); const current=getSavedWallpaperId(); grid.innerHTML="";
   WALLPAPERS.forEach(wp=>{
     const swatch=document.createElement('div'); swatch.className='wallpaper-swatch'+(wp.id===current?' active':'');
-    swatch.style.background=wp.color; swatch.title=wp.label;
+    swatch.style.background=wp.bg; swatch.title=wp.label;
+    if(wp.icon){ swatch.innerHTML=`<span class="wallpaper-icon">${wp.icon}</span>`; }
     swatch.addEventListener('click',()=>{ applyWallpaper(wp.id); renderWallpaperGrid(); showToast(`papel de parede: ${wp.label} 🎨`); });
-    grid.appendChild(swatch);
+    const label=document.createElement('span'); label.className='wallpaper-label'; label.textContent=wp.label;
+    const wrap=document.createElement('div'); wrap.className='wallpaper-item';
+    wrap.appendChild(swatch); wrap.appendChild(label);
+    grid.appendChild(wrap);
   });
 }
 $('#wallpaper-btn').addEventListener('click',()=>{ renderWallpaperGrid(); $('#wallpaper-sheet-overlay').classList.add('active'); });
