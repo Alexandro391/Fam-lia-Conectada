@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -14,30 +14,47 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-  :root{
+  /* ========== TEMA CLARO (padrão) ========== */
+  :root {
     --bg: #FFF8F1;
     --bg-chat: #FFFBF6;
     --surface: #FFFFFF;
-    --teal: #0F6E56;
-    --teal-light: #E1F5EE;
-    --teal-dark: #085041;
-    --coral: #D85A30;
-    --coral-light: #FAECE7;
-    --amber: #BA7517;
-    --amber-light: #FAEEDA;
+    --bubble-other: #FFFFFF;
+    --bubble-mine: #0F6E56;
+    --bubble-mine-text: #E1F5EE;
     --text: #2C2C2A;
     --text-soft: #5F5E5A;
     --text-hint: #888780;
     --border: rgba(44,44,42,0.08);
-    --bubble-mine: #0F6E56;
-    --bubble-mine-text: #E1F5EE;
-    --bubble-other: #FFFFFF;
     --shadow: 0 2px 10px rgba(44,44,42,0.06);
-    --radius: 18px;
+    --header-bg: #0F6E56;
+    --header-text: #FFFFFF;
+    --input-bg: #F5F5F5;
+    --reply-bar-bg: #E1F5EE;
+    --reply-bar-border: #0F6E56;
+  }
+
+  /* ========== TEMA ESCURO ========== */
+  [data-theme="dark"] {
+    --bg: #0B141A;
+    --bg-chat: #1A2B33;
+    --surface: #1F2C34;
+    --bubble-other: #2A3942;
+    --bubble-mine: #005C4B;
+    --bubble-mine-text: #E9EDEF;
+    --text: #E9EDEF;
+    --text-soft: #AEBAC1;
+    --text-hint: #6A7B85;
+    --border: rgba(233,237,239,0.12);
+    --shadow: 0 2px 10px rgba(0,0,0,0.4);
+    --header-bg: #1F2C34;
+    --header-text: #E9EDEF;
+    --input-bg: #2A3942;
+    --reply-bar-bg: #2A3942;
+    --reply-bar-border: #005C4B;
   }
 
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-
   html,body{
     margin:0; padding:0; height:100%;
     background:var(--bg);
@@ -45,793 +62,298 @@
     color:var(--text);
     overscroll-behavior:none;
   }
-
-  body{
-    display:flex;
-    justify-content:center;
-  }
-
+  body{display:flex; justify-content:center;}
   #app{
-    width:100%;
-    max-width:480px;
-    height:100vh;
-    height:100dvh;
-    display:flex;
-    flex-direction:column;
-    position:relative;
+    width:100%; max-width:480px; height:100vh; height:100dvh;
+    display:flex; flex-direction:column; position:relative;
     background:var(--bg-chat);
   }
+  .display-font{font-family:'Fredoka', sans-serif;}
 
-  .display-font{
-    font-family:'Fredoka', sans-serif;
-  }
-
-  /* ===== Loading ===== */
+  /* ===== LOADING ===== */
   #loading-screen{
     position:absolute; inset:0;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background:var(--bg);
-    z-index:999;
-    gap:14px;
+    background:var(--bg); z-index:999; gap:14px;
   }
-  #loading-screen .emoji-spin{
-    font-size:48px;
-    animation:spin 1.4s ease-in-out infinite;
-  }
-  @keyframes spin{
-    0%,100%{transform:rotate(-8deg) scale(1);}
-    50%{transform:rotate(8deg) scale(1.08);}
-  }
-  #loading-screen p{
-    color:var(--text-soft);
-    font-size:14px;
-  }
+  #loading-screen .emoji-spin{font-size:48px; animation:spin 1.4s ease-in-out infinite;}
+  @keyframes spin{0%,100%{transform:rotate(-8deg) scale(1);} 50%{transform:rotate(8deg) scale(1.08);}}
+  #loading-screen p{color:var(--text-soft); font-size:14px;}
 
-  /* ===== Screens ===== */
-  .screen{
-    position:absolute; inset:0;
-    display:none;
-    flex-direction:column;
-    background:var(--bg-chat);
-  }
+  /* ===== SCREENS ===== */
+  .screen{position:absolute; inset:0; display:none; flex-direction:column; background:var(--bg-chat);}
   .screen.active{display:flex;}
 
-  /* ===== Login screen ===== */
+  /* ===== LOGIN ===== */
   #screen-login{
-    background:var(--teal);
-    align-items:center;
-    justify-content:center;
-    padding:32px 24px;
-    overflow-y:auto;
+    background:var(--teal, #0F6E56);
+    align-items:center; justify-content:center; padding:32px 24px; overflow-y:auto;
   }
-  #screen-login .login-box{
-    width:100%;
-    max-width:360px;
-  }
-  #screen-login .hero-emoji{
-    font-size:56px;
-    text-align:center;
-    margin-bottom:6px;
-    display:block;
-  }
-  #screen-login h1{
-    color:#FFFFFF;
-    text-align:center;
-    font-size:26px;
-    font-weight:600;
-    margin:0 0 4px;
-  }
-  #screen-login .subtitle{
-    color:rgba(255,255,255,0.75);
-    text-align:center;
-    font-size:14px;
-    margin:0 0 28px;
-  }
+  #screen-login .login-box{width:100%; max-width:360px;}
+  #screen-login .hero-emoji{font-size:56px; text-align:center; margin-bottom:6px; display:block;}
+  #screen-login h1{color:#FFFFFF; text-align:center; font-size:26px; font-weight:600; margin:0 0 4px;}
+  #screen-login .subtitle{color:rgba(255,255,255,0.75); text-align:center; font-size:14px; margin:0 0 28px;}
+
   .person-grid{
-    display:grid;
-    grid-template-columns:repeat(3, 1fr);
-    gap:10px;
-    margin-bottom:24px;
+    display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:24px;
   }
   .person-card{
-    background:rgba(255,255,255,0.12);
-    border:2px solid transparent;
-    border-radius:16px;
-    padding:14px 6px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:6px;
-    cursor:pointer;
-    transition:transform .15s, background .15s, border-color .15s;
-    position:relative;
+    background:rgba(255,255,255,0.12); border:2px solid transparent; border-radius:16px;
+    padding:14px 6px; display:flex; flex-direction:column; align-items:center; gap:6px;
+    cursor:pointer; transition:transform .15s, background .15s, border-color .15s; position:relative;
   }
   .person-card:active{transform:scale(0.94);}
-  .person-card.selected{
-    background:rgba(255,255,255,0.22);
-    border-color:#FFFFFF;
-  }
+  .person-card.selected{background:rgba(255,255,255,0.22); border-color:#FFFFFF;}
   .person-card .avatar{
-    width:48px; height:48px;
-    border-radius:50%;
-    background:rgba(255,255,255,0.9);
-    display:flex; align-items:center; justify-content:center;
-    font-size:24px;
-    position:relative;
+    width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,0.9);
+    display:flex; align-items:center; justify-content:center; font-size:24px; position:relative;
     transition:transform 0.2s;
   }
-  .person-card .avatar:hover{
-    transform:scale(1.05);
-  }
+  .person-card .avatar:hover{transform:scale(1.05);}
   .person-card .avatar .profile-edit-btn{
-    position:absolute;
-    bottom:-4px;
-    right:-4px;
-    background:var(--teal);
-    border:2px solid #fff;
-    border-radius:50%;
-    width:20px;
-    height:20px;
-    font-size:10px;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    color:#fff;
-    cursor:pointer;
-    padding:0;
+    position:absolute; bottom:-4px; right:-4px; background:#0F6E56; border:2px solid #fff;
+    border-radius:50%; width:20px; height:20px; font-size:10px; display:none;
+    align-items:center; justify-content:center; color:#fff; cursor:pointer; padding:0;
   }
-  .person-card:hover .avatar .profile-edit-btn{
-    display:flex;
-  }
-  .person-card .pname{
-    color:#FFFFFF;
-    font-size:12px;
-    font-weight:500;
-    text-align:center;
-    line-height:1.2;
-  }
+  .person-card:hover .avatar .profile-edit-btn{display:flex;}
+  .person-card .pname{color:#FFFFFF; font-size:12px; font-weight:500; text-align:center; line-height:1.2;}
 
-  .pin-section{
-    display:none;
-    flex-direction:column;
-    align-items:center;
-    gap:16px;
-  }
+  .pin-section{display:none; flex-direction:column; align-items:center; gap:16px;}
   .pin-section.active{display:flex;}
-  .pin-dots{
-    display:flex;
-    gap:14px;
-  }
-  .pin-dot{
-    width:16px; height:16px;
-    border-radius:50%;
-    border:2px solid rgba(255,255,255,0.5);
-    background:transparent;
-    transition:background .15s, border-color .15s;
-  }
-  .pin-dot.filled{
-    background:#FFFFFF;
-    border-color:#FFFFFF;
-  }
-  .pin-keypad{
-    display:grid;
-    grid-template-columns:repeat(3, 1fr);
-    gap:12px;
-    width:100%;
-    max-width:260px;
-  }
+  .pin-dots{display:flex; gap:14px;}
+  .pin-dot{width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,0.5); background:transparent; transition:background .15s, border-color .15s;}
+  .pin-dot.filled{background:#FFFFFF; border-color:#FFFFFF;}
+  .pin-keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; width:100%; max-width:260px;}
   .pin-key{
-    aspect-ratio:1;
-    border-radius:50%;
-    background:rgba(255,255,255,0.12);
-    border:none;
-    color:#FFFFFF;
-    font-size:20px;
-    font-weight:500;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    transition:background .12s, transform .1s;
+    aspect-ratio:1; border-radius:50%; background:rgba(255,255,255,0.12); border:none;
+    color:#FFFFFF; font-size:20px; font-weight:500; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:background .12s, transform .1s;
   }
   .pin-key:active{transform:scale(0.92); background:rgba(255,255,255,0.25);}
   .pin-key.ghost{background:transparent; cursor:default;}
-  .login-error{
-    color:#FAC775;
-    font-size:13px;
-    text-align:center;
-    min-height:18px;
-    margin-top:4px;
-  }
-  .back-link{
-    color:rgba(255,255,255,0.7);
-    font-size:13px;
-    text-align:center;
-    margin-top:18px;
-    cursor:pointer;
-    text-decoration:underline;
-  }
+  .login-error{color:#FAC775; font-size:13px; text-align:center; min-height:18px; margin-top:4px;}
+  .back-link{color:rgba(255,255,255,0.7); font-size:13px; text-align:center; margin-top:18px; cursor:pointer; text-decoration:underline;}
 
-  /* ===== Chat screen ===== */
-  #screen-chat{
-    background:var(--bg-chat);
-  }
-
+  /* ===== CHAT HEADER ===== */
   .chat-header{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:14px 16px;
-    background:var(--surface);
-    border-bottom:1px solid var(--border);
-    flex-shrink:0;
+    display:flex; align-items:center; gap:10px; padding:12px 16px;
+    background:var(--header-bg); color:var(--header-text); flex-shrink:0;
   }
   .chat-header .avatars-stack{display:flex;}
   .chat-header .mini-avatar{
-    width:30px; height:30px;
-    border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    font-size:14px;
-    border:2px solid var(--surface);
-    margin-left:-10px;
+    width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:14px; border:2px solid var(--header-bg); margin-left:-10px;
   }
   .chat-header .mini-avatar:first-child{margin-left:0;}
   .chat-header .title-block{flex:1; min-width:0;}
-  .chat-header .title-block h1{
-    font-size:16px;
-    font-weight:500;
-    margin:0;
-    line-height:1.2;
-  }
-  .chat-header .title-block .status{
-    font-size:11px;
-    color:var(--text-hint);
-    margin:0;
-    height:14px;
-  }
+  .chat-header .title-block h1{font-size:16px; font-weight:500; margin:0; line-height:1.2; color:var(--header-text);}
+  .chat-header .title-block .status{font-size:11px; margin:0; height:14px; opacity:0.8; color:var(--header-text);}
   .chat-header .icon-btn{
-    width:34px; height:34px;
-    border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    color:var(--text-soft);
-    font-size:18px;
-    cursor:pointer;
-    background:transparent;
-    border:none;
+    width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    color:var(--header-text); font-size:18px; cursor:pointer; background:transparent; border:none;
+    transition:background 0.15s;
   }
-  .chat-header .icon-btn:active{background:var(--bg);}
+  .chat-header .icon-btn:active{background:rgba(255,255,255,0.15);}
 
+  /* ===== MESSAGES ===== */
   #messages-container{
-    flex:1;
-    overflow-y:auto;
-    padding:14px 12px 8px;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
+    flex:1; overflow-y:auto; padding:14px 12px 8px; display:flex; flex-direction:column; gap:14px;
     -webkit-overflow-scrolling:touch;
   }
+  .day-divider{text-align:center; font-size:11px; color:var(--text-hint); margin:8px 0 2px;}
 
-  .day-divider{
-    text-align:center;
-    font-size:11px;
-    color:var(--text-hint);
-    margin:8px 0 2px;
-    position:relative;
-  }
-
-  .msg-row{
-    display:flex;
-    gap:8px;
-    align-items:flex-end;
-    animation:bubbleIn .25s ease-out;
-  }
-  @keyframes bubbleIn{
-    from{opacity:0; transform:translateY(8px) scale(0.96);}
-    to{opacity:1; transform:translateY(0) scale(1);}
-  }
+  .msg-row{display:flex; gap:8px; align-items:flex-end; animation:bubbleIn .25s ease-out;}
+  @keyframes bubbleIn{from{opacity:0; transform:translateY(8px) scale(0.96);} to{opacity:1; transform:translateY(0) scale(1);}}
   .msg-row.mine{justify-content:flex-end;}
 
   .msg-avatar{
-    width:32px; height:32px;
-    border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    font-size:16px;
-    flex-shrink:0;
-    border:2px solid var(--surface);
-    box-shadow:var(--shadow);
-    cursor:pointer;
-    transition:transform 0.15s;
+    width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:16px; flex-shrink:0; border:2px solid var(--surface); box-shadow:var(--shadow);
+    cursor:pointer; transition:transform 0.15s;
   }
-  .msg-avatar:hover{
-    transform:scale(1.05);
-  }
+  .msg-avatar:hover{transform:scale(1.05);}
   .msg-row.mine .msg-avatar{display:none;}
 
-  .msg-stack{
-    display:flex;
-    flex-direction:column;
-    max-width:74%;
-    position:relative;
-  }
+  .msg-stack{display:flex; flex-direction:column; max-width:80%; position:relative;}
   .msg-row.mine .msg-stack{align-items:flex-end;}
 
-  .msg-author{
-    font-size:12px;
-    font-weight:600;
-    margin:0 0 2px 4px;
-  }
+  .msg-author{font-size:12px; font-weight:600; margin:0 0 2px 4px;}
 
   .msg-bubble{
-    border-radius:16px 16px 16px 4px;
-    padding:9px 13px;
-    background:var(--bubble-other);
-    box-shadow:var(--shadow);
-    font-size:14.5px;
-    line-height:1.4;
-    word-break:break-word;
-    position:relative;
+    border-radius:16px 16px 16px 4px; padding:9px 13px; background:var(--bubble-other);
+    box-shadow:var(--shadow); font-size:14.5px; line-height:1.4; word-break:break-word; position:relative;
   }
   .msg-row.mine .msg-bubble{
-    border-radius:16px 16px 4px 16px;
-    background:var(--bubble-mine);
-    color:var(--bubble-mine-text);
+    border-radius:16px 16px 4px 16px; background:var(--bubble-mine); color:var(--bubble-mine-text);
   }
+  .msg-bubble .reply-quote{
+    background:rgba(0,0,0,0.06); border-radius:8px; padding:6px 10px; margin-bottom:6px;
+    border-left:3px solid var(--teal, #0F6E56); font-size:12px; opacity:0.7;
+  }
+  .msg-row.mine .msg-bubble .reply-quote{background:rgba(255,255,255,0.12); border-left-color:#ffffff;}
+  .msg-bubble .reply-quote .reply-author{font-weight:600;}
+
   .msg-bubble.gif-bubble{padding:4px;}
-  .msg-bubble.gif-bubble img{
-    display:block;
-    max-width:180px;
-    max-height:180px;
-    border-radius:13px;
-  }
+  .msg-bubble.gif-bubble img{display:block; max-width:180px; max-height:180px; border-radius:13px;}
   .msg-bubble.photo-bubble{padding:4px;}
-  .msg-bubble.photo-bubble img{
-    display:block;
-    max-width:220px;
-    max-height:300px;
-    border-radius:13px;
-    object-fit:cover;
-  }
+  .msg-bubble.photo-bubble img{display:block; max-width:220px; max-height:300px; border-radius:13px; object-fit:cover;}
+  .msg-bubble.video-bubble{padding:4px;}
+  .msg-bubble.video-bubble video{display:block; max-width:220px; max-height:300px; border-radius:13px; background:#000;}
   .msg-bubble.sound-bubble{
-    display:flex;
-    align-items:center;
-    gap:8px;
+    display:flex; align-items:center; gap:8px; cursor:pointer; padding:8px 14px;
+  }
+  .msg-bubble.audio-bubble{
+    display:flex; align-items:center; gap:10px; padding:6px 14px; min-width:140px;
     cursor:pointer;
-    padding:8px 14px;
+  }
+  .msg-bubble.audio-bubble .audio-wave{
+    flex:1; height:20px; display:flex; align-items:center; gap:2px;
+  }
+  .msg-bubble.audio-bubble .audio-wave span{
+    display:block; width:3px; background:currentColor; border-radius:2px;
+    animation:wave 1s ease-in-out infinite;
+  }
+  .msg-bubble.audio-bubble .audio-wave span:nth-child(2){animation-delay:0.1s; height:10px;}
+  .msg-bubble.audio-bubble .audio-wave span:nth-child(3){animation-delay:0.2s; height:6px;}
+  .msg-bubble.audio-bubble .audio-wave span:nth-child(4){animation-delay:0.3s; height:14px;}
+  .msg-bubble.audio-bubble .audio-wave span:nth-child(5){animation-delay:0.4s; height:8px;}
+  .msg-bubble.audio-bubble .audio-wave span:nth-child(6){animation-delay:0.5s; height:12px;}
+  .msg-bubble.audio-bubble .audio-wave span:nth-child(7){animation-delay:0.6s; height:6px;}
+  .msg-bubble.audio-bubble .audio-wave span:nth-child(8){animation-delay:0.7s; height:10px;}
+  .msg-bubble.audio-bubble .audio-time{font-size:11px; opacity:0.7; min-width:32px; text-align:center;}
+  @keyframes wave{0%,100%{height:4px;} 50%{height:16px;}}
+
+  .msg-bubble.sticker-bubble{
+    background:transparent !important; box-shadow:none; padding:0; font-size:64px; line-height:1;
   }
 
   .msg-time{
-    font-size:10px;
-    color:var(--text-hint);
-    margin:3px 4px 0;
+    font-size:10px; color:var(--text-hint); margin:3px 4px 0;
+    display:flex; align-items:center; gap:4px;
   }
+  .msg-time .status-icon{font-size:12px;}
 
-  .reactions-bar{
-    display:flex;
-    gap:4px;
-    margin-top:3px;
-    flex-wrap:wrap;
-  }
+  .reactions-bar{display:flex; gap:4px; margin-top:3px; flex-wrap:wrap;}
   .reaction-chip{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:1px 7px;
-    font-size:12px;
-    display:flex;
-    align-items:center;
-    gap:3px;
-    box-shadow:var(--shadow);
-    cursor:pointer;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:1px 7px; font-size:12px; display:flex; align-items:center; gap:3px;
+    box-shadow:var(--shadow); cursor:pointer;
   }
-  .reaction-chip.mine-reacted{
-    border-color:var(--teal);
-    background:var(--teal-light);
-  }
+  .reaction-chip.mine-reacted{border-color:var(--teal); background:var(--teal-light);}
 
-  /* quick reaction popover */
+  /* Popover */
   .reaction-popover{
-    position:absolute;
-    bottom:100%;
-    margin-bottom:6px;
-    background:var(--surface);
-    border-radius:18px;
-    box-shadow:0 4px 16px rgba(0,0,0,0.15);
-    padding:6px 8px;
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-    z-index:50;
-    animation:popIn .15s ease-out;
+    position:absolute; bottom:100%; margin-bottom:6px; background:var(--surface);
+    border-radius:18px; box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:6px 8px;
+    display:flex; flex-direction:column; gap:2px; z-index:50; animation:popIn .15s ease-out;
     min-width:max-content;
   }
-  @keyframes popIn{
-    from{opacity:0; transform:scale(0.8) translateY(6px);}
-    to{opacity:1; transform:scale(1) translateY(0);}
-  }
-  .popover-emoji-row{
-    display:flex;
-    gap:4px;
-  }
-  .popover-emoji-row button{
-    font-size:22px;
-    background:none;
-    border:none;
-    padding:4px;
-    cursor:pointer;
-    transition:transform .1s;
-    line-height:1;
-  }
+  @keyframes popIn{from{opacity:0; transform:scale(0.8) translateY(6px);} to{opacity:1; transform:scale(1) translateY(0);}}
+  .popover-emoji-row{display:flex; gap:4px;}
+  .popover-emoji-row button{font-size:22px; background:none; border:none; padding:4px; cursor:pointer; transition:transform .1s; line-height:1;}
   .popover-emoji-row button:active{transform:scale(1.3);}
-  .popover-actions-row{
-    display:flex;
-    flex-direction:column;
-    border-top:0.5px solid var(--border);
-    margin-top:3px;
-    padding-top:3px;
-  }
+  .popover-actions-row{display:flex; flex-direction:column; border-top:0.5px solid var(--border); margin-top:3px; padding-top:3px;}
   .popover-action-btn{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    background:none;
-    border:none;
-    padding:7px 10px;
-    font-size:13px;
-    color:var(--text);
-    cursor:pointer;
-    border-radius:8px;
-    text-align:left;
-    font-family:'Nunito', sans-serif;
-    white-space:nowrap;
+    display:flex; align-items:center; gap:6px; background:none; border:none; padding:7px 10px;
+    font-size:13px; color:var(--text); cursor:pointer; border-radius:8px; text-align:left;
+    font-family:'Nunito', sans-serif; white-space:nowrap;
   }
   .popover-action-btn:active{background:var(--bg);}
   .popover-action-btn i{font-size:15px;}
-  .popover-action-danger{color:var(--coral);}
-  .edited-tag{
-    font-size:10.5px;
-    opacity:0.6;
-    font-style:italic;
-  }
+  .popover-action-danger{color:#D85A30;}
+  .edited-tag{font-size:10.5px; opacity:0.6; font-style:italic;}
 
-  /* ===== Composer ===== */
+  /* ===== COMPOSER ===== */
   #composer{
-    display:flex;
-    align-items:center;
-    gap:4px;
-    padding:8px 8px 14px;
-    background:var(--surface);
-    border-top:1px solid var(--border);
-    flex-shrink:0;
-    overflow-x:auto;
+    display:flex; align-items:center; gap:4px; padding:8px 8px 14px;
+    background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; overflow-x:auto;
   }
   #composer::-webkit-scrollbar{display:none;}
   #composer .composer-icon-btn{
-    width:34px; height:34px;
-    border-radius:50%;
-    border:none;
-    background:var(--bg);
-    color:var(--text-soft);
-    font-size:16px;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-    flex-shrink:0;
-  }
-  #composer .composer-icon-btn.active-toggle{
-    background:var(--teal-light);
-    color:var(--teal-dark);
+    width:34px; height:34px; border-radius:50%; border:none; background:var(--bg);
+    color:var(--text-soft); font-size:16px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0; transition:background 0.15s;
   }
   #composer .composer-icon-btn:active{background:var(--border);}
-  #composer .composer-icon-btn.photo-btn{
-    background:var(--teal-light);
-    color:var(--teal);
+  #composer .composer-icon-btn.active-toggle{background:var(--teal-light); color:var(--teal-dark);}
+  #composer .composer-icon-btn.recording{
+    background:#D85A30; color:#fff; animation:pulse 1s infinite;
   }
+  @keyframes pulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.08);}}
+
   #text-input{
-    flex:1;
-    min-width:90px;
-    border:1px solid var(--border);
-    background:var(--bg);
-    border-radius:20px;
-    padding:10px 16px;
-    font-size:14.5px;
-    font-family:'Nunito', sans-serif;
-    color:var(--text);
-    outline:none;
-    resize:none;
-    max-height:90px;
+    flex:1; min-width:90px; border:1px solid var(--border); background:var(--input-bg);
+    border-radius:20px; padding:10px 16px; font-size:14.5px; font-family:'Nunito', sans-serif;
+    color:var(--text); outline:none; resize:none; max-height:90px;
   }
   #send-btn{
-    width:38px; height:38px;
-    border-radius:50%;
-    background:var(--teal);
-    border:none;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-    flex-shrink:0;
+    width:38px; height:38px; border-radius:50%; background:var(--teal); border:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
     transition:transform .1s, opacity .15s;
   }
   #send-btn:active{transform:scale(0.9);}
   #send-btn:disabled{opacity:0.4;}
   #send-btn i{color:var(--teal-light); font-size:17px;}
 
+  /* Reply / Edit bars */
+  .action-bar{
+    display:none; align-items:center; justify-content:space-between; gap:8px;
+    padding:6px 14px; background:var(--reply-bar-bg); border-left:4px solid var(--reply-bar-border);
+    font-size:12.5px; color:var(--text);
+  }
+  .action-bar.active{display:flex;}
+  .action-bar .action-info{flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;}
+  .action-bar .action-close{background:none; border:none; font-size:16px; cursor:pointer; color:var(--text-soft);}
+
   /* Photo preview */
   .photo-preview-bar{
-    display:none;
-    align-items:center;
-    gap:12px;
-    padding:8px 16px;
-    background:var(--teal-light);
-    border-top:1px solid var(--border);
+    display:none; align-items:center; gap:12px; padding:8px 16px;
+    background:var(--reply-bar-bg); border-top:1px solid var(--border);
   }
   .photo-preview-bar.active{display:flex;}
-  .photo-preview-bar img{
-    width:50px;
-    height:50px;
-    border-radius:8px;
-    object-fit:cover;
+  .photo-preview-bar img, .photo-preview-bar video{
+    width:50px; height:50px; border-radius:8px; object-fit:cover;
   }
-  .photo-preview-bar .preview-info{
-    flex:1;
-    font-size:13px;
-    color:var(--text-soft);
-  }
-  .photo-preview-bar .preview-close{
-    background:none;
-    border:none;
-    font-size:18px;
-    cursor:pointer;
-    color:var(--text-soft);
-  }
+  .photo-preview-bar .preview-info{flex:1; font-size:13px; color:var(--text-soft);}
+  .photo-preview-bar .preview-close{background:none; border:none; font-size:18px; cursor:pointer; color:var(--text-soft);}
 
-  /* ===== GIF picker sheet ===== */
-  .sheet-overlay{
-    position:absolute; inset:0;
-    background:rgba(0,0,0,0.4);
-    display:none;
-    align-items:flex-end;
-    z-index:200;
-  }
+  /* ===== SHEETS ===== */
+  .sheet-overlay{position:absolute; inset:0; background:rgba(0,0,0,0.4); display:none; align-items:flex-end; z-index:200;}
   .sheet-overlay.active{display:flex;}
-  .sheet{
-    width:100%;
-    background:var(--surface);
-    border-radius:20px 20px 0 0;
-    max-height:70vh;
-    display:flex;
-    flex-direction:column;
-    animation:sheetUp .2s ease-out;
-  }
-  @keyframes sheetUp{
-    from{transform:translateY(100%);}
-    to{transform:translateY(0);}
-  }
-  .sheet-handle{
-    width:36px; height:4px;
-    background:var(--border);
-    border-radius:2px;
-    margin:10px auto 8px;
-  }
-  .sheet-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 16px 10px;
-  }
-  .sheet-header h2{font-size:15px; font-weight:600; margin:0;}
-  .sheet-header .close-btn{
-    background:none; border:none; font-size:18px; color:var(--text-soft); cursor:pointer;
-  }
-  #gif-mode-tabs{
-    display:flex;
-    gap:6px;
-    padding:0 16px 10px;
-  }
-  .gif-mode-tab{
-    background:var(--bg);
-    border:1px solid var(--border);
-    border-radius:14px;
-    padding:6px 14px;
-    font-size:13px;
-    font-weight:500;
-    color:var(--text-soft);
-    cursor:pointer;
-  }
-  .gif-mode-tab.active{
-    background:var(--teal);
-    border-color:var(--teal);
-    color:#fff;
-  }
-  #gif-search{
-    margin:0 16px 10px;
-    padding:9px 14px;
-    border-radius:14px;
-    border:1px solid var(--border);
-    background:var(--bg);
-    font-size:14px;
-    outline:none;
-  }
-  #gif-results{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-    padding:0 16px 16px;
-    overflow-y:auto;
-  }
-  #gif-results img{
-    width:100%;
-    border-radius:12px;
-    cursor:pointer;
-    display:block;
-    background:var(--bg);
-  }
-  #gif-results .gif-hint{
-    grid-column:1/-1;
-    text-align:center;
-    color:var(--text-hint);
-    font-size:13px;
-    padding:20px 0;
-  }
+  .sheet{width:100%; background:var(--surface); border-radius:20px 20px 0 0; max-height:70vh; display:flex; flex-direction:column; animation:sheetUp .2s ease-out;}
+  @keyframes sheetUp{from{transform:translateY(100%);} to{transform:translateY(0);}}
+  .sheet-handle{width:36px; height:4px; background:var(--border); border-radius:2px; margin:10px auto 8px;}
+  .sheet-header{display:flex; align-items:center; justify-content:space-between; padding:0 16px 10px;}
+  .sheet-header h2{font-size:15px; font-weight:600; margin:0; color:var(--text);}
+  .sheet-header .close-btn{background:none; border:none; font-size:18px; color:var(--text-soft); cursor:pointer;}
 
-  /* ===== Emoji picker ===== */
-  #emoji-category-tabs{
-    display:flex;
-    gap:4px;
-    padding:0 12px 8px;
-    overflow-x:auto;
-  }
-  #emoji-category-tabs::-webkit-scrollbar{display:none;}
-  .emoji-cat-tab{
-    flex-shrink:0;
-    background:var(--bg);
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:6px 10px;
-    font-size:18px;
-    cursor:pointer;
-  }
-  .emoji-cat-tab.active{
-    background:var(--teal-light);
-    border-color:var(--teal);
-  }
-  #emoji-grid{
-    display:grid;
-    grid-template-columns:repeat(6, 1fr);
-    gap:2px;
-    padding:0 12px 16px;
-    overflow-y:auto;
-  }
-  #emoji-grid button{
-    background:none;
-    border:none;
-    font-size:24px;
-    padding:8px 0;
-    cursor:pointer;
-    border-radius:10px;
-    line-height:1;
-  }
-  #emoji-grid button:active{background:var(--bg); transform:scale(1.15);}
-
-  /* ===== Sticker picker ===== */
-  #sticker-grid{
-    display:grid;
-    grid-template-columns:repeat(4, 1fr);
-    gap:10px;
-    padding:0 16px 16px;
-    overflow-y:auto;
-  }
-  .sticker-item{
-    background:var(--bg);
-    border:1px solid var(--border);
-    border-radius:16px;
-    padding:14px 4px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:4px;
-    cursor:pointer;
-    transition:all 0.15s;
-  }
+  /* Stickers */
+  .sticker-categories{display:flex; gap:6px; padding:0 16px 10px; overflow-x:auto;}
+  .sticker-categories::-webkit-scrollbar{display:none;}
+  .sticker-cat-btn{flex-shrink:0; background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:4px 12px; font-size:12px; cursor:pointer;}
+  .sticker-cat-btn.active{background:var(--teal); color:#fff; border-color:var(--teal);}
+  #sticker-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:0 16px 16px; overflow-y:auto;}
+  .sticker-item{background:var(--bg); border:1px solid var(--border); border-radius:16px; padding:14px 4px; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; transition:all 0.15s;}
   .sticker-item:active{transform:scale(0.94); background:var(--teal-light);}
   .sticker-item .sticker-emoji{font-size:48px; line-height:1;}
   .sticker-item .sticker-label{font-size:10.5px; color:var(--text-soft); text-align:center;}
-  .msg-bubble.sticker-bubble{
-    background:transparent !important;
-    box-shadow:none;
-    padding:0;
-    font-size:64px;
-    line-height:1;
-  }
-  /* Sticker categories */
-  .sticker-categories{
-    display:flex;
-    gap:6px;
-    padding:0 16px 10px;
-    overflow-x:auto;
-  }
-  .sticker-categories::-webkit-scrollbar{display:none;}
-  .sticker-cat-btn{
-    flex-shrink:0;
-    background:var(--bg);
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:4px 12px;
-    font-size:12px;
-    cursor:pointer;
-  }
-  .sticker-cat-btn.active{
-    background:var(--teal);
-    color:#fff;
-    border-color:var(--teal);
-  }
 
-  /* ===== Wallpaper picker ===== */
-  #wallpaper-grid{
-    display:grid;
-    grid-template-columns:repeat(4, 1fr);
-    gap:10px;
-    padding:0 16px 16px;
-  }
-  .wallpaper-swatch{
-    aspect-ratio:1;
-    border-radius:14px;
-    border:2px solid var(--border);
-    cursor:pointer;
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
+  #emoji-grid, .profile-emoji-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:2px; padding:0 12px 16px; overflow-y:auto;}
+  #emoji-grid button, .profile-emoji-grid button{background:none; border:none; font-size:24px; padding:8px 0; cursor:pointer; border-radius:10px; line-height:1;}
+  #emoji-grid button:active, .profile-emoji-grid button:active{background:var(--bg); transform:scale(1.15);}
+  .profile-emoji-grid button.current-emoji{background:var(--teal-light); border:2px solid var(--teal);}
+
+  #gif-results{display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 16px 16px; overflow-y:auto;}
+  #gif-results img{width:100%; border-radius:12px; cursor:pointer; display:block; background:var(--bg);}
+  #gif-results .gif-hint{grid-column:1/-1; text-align:center; color:var(--text-hint); font-size:13px; padding:20px 0;}
+
+  #wallpaper-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:0 16px 16px;}
+  .wallpaper-swatch{aspect-ratio:1; border-radius:14px; border:2px solid var(--border); cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center;}
   .wallpaper-swatch.active{border-color:var(--teal);}
-  .wallpaper-swatch.active::after{
-    content:"\2713";
-    color:#fff;
-    font-size:18px;
-    font-weight:700;
-    text-shadow:0 1px 2px rgba(0,0,0,0.3);
-  }
+  .wallpaper-swatch.active::after{content:"\2713"; color:#fff; font-size:18px; font-weight:700; text-shadow:0 1px 2px rgba(0,0,0,0.3);}
 
-  /* Profile emoji picker */
-  .profile-emoji-grid{
-    display:grid;
-    grid-template-columns:repeat(6, 1fr);
-    gap:6px;
-    padding:0 16px 16px;
-  }
-  .profile-emoji-grid button{
-    background:var(--bg);
-    border:1px solid var(--border);
-    border-radius:12px;
-    font-size:28px;
-    padding:10px 0;
-    cursor:pointer;
-    transition:all 0.15s;
-  }
-  .profile-emoji-grid button:active{
-    transform:scale(0.9);
-    background:var(--teal-light);
-  }
-  .profile-emoji-grid button.current-emoji{
-    background:var(--teal-light);
-    border-color:var(--teal);
-  }
-
-  .toast{
-    position:absolute;
-    bottom:90px;
-    left:50%;
-    transform:translateX(-50%);
-    background:var(--text);
-    color:#fff;
-    padding:9px 18px;
-    border-radius:20px;
-    font-size:13px;
-    z-index:300;
-    opacity:0;
-    transition:opacity .25s;
-    pointer-events:none;
-    white-space:nowrap;
-  }
+  .toast{position:absolute; bottom:90px; left:50%; transform:translateX(-50%); background:var(--text); color:#fff; padding:9px 18px; border-radius:20px; font-size:13px; z-index:300; opacity:0; transition:opacity .25s; pointer-events:none; white-space:nowrap;}
   .toast.show{opacity:1;}
-
   ::-webkit-scrollbar{width:0; height:0;}
 </style>
 </head>
@@ -839,28 +361,18 @@
 
 <div id="app">
 
-  <div id="loading-screen">
-    <span class="emoji-spin">🏠</span>
-    <p>carregando a família...</p>
-  </div>
+  <div id="loading-screen"><span class="emoji-spin">🏠</span><p>carregando a família...</p></div>
 
-  <!-- LOGIN SCREEN -->
+  <!-- LOGIN -->
   <div id="screen-login" class="screen">
     <div class="login-box">
       <span class="hero-emoji">👋</span>
       <h1 class="display-font">Família Conecta</h1>
       <p class="subtitle">escolha quem você é</p>
-
       <div class="person-grid" id="person-grid"></div>
-
       <div class="pin-section" id="pin-section">
         <p style="color:#fff; font-size:14px; margin:0;" id="pin-greeting">oi! qual seu PIN?</p>
-        <div class="pin-dots" id="pin-dots">
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-        </div>
+        <div class="pin-dots" id="pin-dots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div>
         <div class="pin-keypad" id="pin-keypad"></div>
         <p class="login-error" id="login-error"></p>
         <p class="back-link" id="back-link">← escolher outra pessoa</p>
@@ -868,7 +380,7 @@
     </div>
   </div>
 
-  <!-- CHAT SCREEN -->
+  <!-- CHAT -->
   <div id="screen-chat" class="screen">
     <div class="chat-header">
       <div class="avatars-stack" id="header-avatars"></div>
@@ -876,17 +388,31 @@
         <h1 class="display-font">Família Conecta</h1>
         <p class="status" id="typing-status"></p>
       </div>
+      <button class="icon-btn" id="dark-mode-btn" aria-label="Modo escuro"><i class="ti ti-moon"></i></button>
       <button class="icon-btn" id="wallpaper-btn" aria-label="Papel de parede"><i class="ti ti-photo"></i></button>
       <button class="icon-btn" id="logout-btn" aria-label="Sair"><i class="ti ti-logout"></i></button>
     </div>
 
     <div id="messages-container"></div>
 
-    <!-- Photo Preview Bar -->
-    <div class="photo-preview-bar" id="photo-preview-bar">
-      <img id="photo-preview-img" src="" alt="Preview">
-      <span class="preview-info" id="photo-preview-info">foto selecionada</span>
-      <button class="preview-close" id="photo-preview-close"><i class="ti ti-x"></i></button>
+    <!-- Reply Bar -->
+    <div class="action-bar" id="reply-bar">
+      <span class="action-info" id="reply-info">↩️ respondendo a <strong>...</strong></span>
+      <button class="action-close" id="reply-close"><i class="ti ti-x"></i></button>
+    </div>
+
+    <!-- Edit Bar -->
+    <div class="action-bar" id="edit-bar">
+      <span class="action-info"><i class="ti ti-edit" style="margin-right:4px;"></i>editando mensagem</span>
+      <button class="action-close" id="edit-close"><i class="ti ti-x"></i></button>
+    </div>
+
+    <!-- Photo/Video Preview -->
+    <div class="photo-preview-bar" id="media-preview-bar">
+      <img id="media-preview-img" src="" alt="Preview" style="display:none;">
+      <video id="media-preview-video" src="" style="display:none;"></video>
+      <span class="preview-info" id="media-preview-info">arquivo selecionado</span>
+      <button class="preview-close" id="media-preview-close"><i class="ti ti-x"></i></button>
     </div>
 
     <div id="composer">
@@ -894,99 +420,23 @@
       <button class="composer-icon-btn" id="sticker-btn" aria-label="Figurinhas"><i class="ti ti-stack-2"></i></button>
       <button class="composer-icon-btn" id="open-soundboard" aria-label="Sons"><i class="ti ti-volume"></i></button>
       <button class="composer-icon-btn" id="gif-btn" aria-label="Enviar GIF"><i class="ti ti-gif"></i></button>
-      <button class="composer-icon-btn photo-btn" id="photo-btn" aria-label="Enviar foto"><i class="ti ti-camera"></i></button>
-      <input type="file" id="photo-input" accept="image/*" style="display:none;">
-      <textarea id="text-input" rows="1" placeholder="escreva algo divertido..."></textarea>
+      <button class="composer-icon-btn" id="attach-btn" aria-label="Anexar"><i class="ti ti-clip"></i></button>
+      <input type="file" id="attach-input" accept="image/*,video/*" style="display:none;">
+      <button class="composer-icon-btn" id="mic-btn" aria-label="Áudio"><i class="ti ti-microphone"></i></button>
+      <textarea id="text-input" rows="1" placeholder="escreva algo..."></textarea>
       <button id="send-btn" disabled aria-label="Enviar"><i class="ti ti-send"></i></button>
     </div>
   </div>
 
-  <!-- EMOJI PICKER SHEET -->
-  <div class="sheet-overlay" id="emoji-sheet-overlay">
-    <div class="sheet" style="max-height:75vh;">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h2>emojis</h2>
-        <button class="close-btn" id="close-emoji-sheet"><i class="ti ti-x"></i></button>
-      </div>
-      <div id="emoji-category-tabs"></div>
-      <div id="emoji-grid"></div>
-    </div>
-  </div>
-
-  <!-- STICKER PICKER SHEET -->
-  <div class="sheet-overlay" id="sticker-sheet-overlay">
-    <div class="sheet" style="max-height:70vh;">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h2>figurinhas</h2>
-        <button class="close-btn" id="close-sticker-sheet"><i class="ti ti-x"></i></button>
-      </div>
-      <div class="sticker-categories" id="sticker-categories"></div>
-      <div id="sticker-grid"></div>
-    </div>
-  </div>
-
-  <!-- GIF PICKER SHEET -->
-  <div class="sheet-overlay" id="gif-sheet-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h2 id="gif-sheet-title">escolher um GIF</h2>
-        <button class="close-btn" id="close-gif-sheet"><i class="ti ti-x"></i></button>
-      </div>
-      <div id="gif-mode-tabs">
-        <button class="gif-mode-tab active" data-mode="gif">GIFs</button>
-        <button class="gif-mode-tab" data-mode="meme">memes</button>
-      </div>
-      <input type="text" id="gif-search" placeholder="buscar GIF (ex: bom dia, risada...)">
-      <div id="gif-results"><p class="gif-hint">digite algo para buscar 🔍</p></div>
-    </div>
-  </div>
-
-  <!-- SOUNDBOARD SHEET -->
-  <div class="sheet-overlay" id="sound-sheet-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h2>soundboard da família</h2>
-        <button class="close-btn" id="close-sound-sheet"><i class="ti ti-x"></i></button>
-      </div>
-      <div id="sound-results" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 16px 16px;"></div>
-    </div>
-  </div>
-
-  <!-- WALLPAPER PICKER SHEET -->
-  <div class="sheet-overlay" id="wallpaper-sheet-overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h2>papel de parede</h2>
-        <button class="close-btn" id="close-wallpaper-sheet"><i class="ti ti-x"></i></button>
-      </div>
-      <p style="font-size:12.5px; color:var(--text-hint); margin:0 16px 12px;">só muda a tela pra você — cada um escolhe a própria cor</p>
-      <div id="wallpaper-grid"></div>
-    </div>
-  </div>
-
-  <!-- PROFILE EMOJI PICKER SHEET -->
-  <div class="sheet-overlay" id="profile-sheet-overlay">
-    <div class="sheet" style="max-height:60vh;">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <h2>escolha seu emoji de perfil</h2>
-        <button class="close-btn" id="close-profile-sheet"><i class="ti ti-x"></i></button>
-      </div>
-      <div style="padding:0 16px 8px; display:flex; align-items:center; gap:12px; justify-content:center;">
-        <span style="font-size:14px; color:var(--text-soft);">seu atual:</span>
-        <span id="profile-current-preview" style="font-size:32px; background:var(--bg); padding:4px 16px; border-radius:12px;"></span>
-      </div>
-      <div class="profile-emoji-grid" id="profile-emoji-grid"></div>
-    </div>
-  </div>
+  <!-- SHEETS: Emoji, Sticker, GIF, Sound, Wallpaper, Profile -->
+  <div class="sheet-overlay" id="emoji-sheet-overlay"><div class="sheet" style="max-height:75vh;"><div class="sheet-handle"></div><div class="sheet-header"><h2>emojis</h2><button class="close-btn" id="close-emoji-sheet"><i class="ti ti-x"></i></button></div><div id="emoji-category-tabs"></div><div id="emoji-grid"></div></div></div>
+  <div class="sheet-overlay" id="sticker-sheet-overlay"><div class="sheet" style="max-height:70vh;"><div class="sheet-handle"></div><div class="sheet-header"><h2>figurinhas</h2><button class="close-btn" id="close-sticker-sheet"><i class="ti ti-x"></i></button></div><div class="sticker-categories" id="sticker-categories"></div><div id="sticker-grid"></div></div></div>
+  <div class="sheet-overlay" id="gif-sheet-overlay"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-header"><h2 id="gif-sheet-title">escolher um GIF</h2><button class="close-btn" id="close-gif-sheet"><i class="ti ti-x"></i></button></div><div id="gif-mode-tabs"><button class="gif-mode-tab active" data-mode="gif">GIFs</button><button class="gif-mode-tab" data-mode="meme">memes</button></div><input type="text" id="gif-search" placeholder="buscar GIF..."><div id="gif-results"><p class="gif-hint">digite algo para buscar 🔍</p></div></div></div>
+  <div class="sheet-overlay" id="sound-sheet-overlay"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-header"><h2>soundboard</h2><button class="close-btn" id="close-sound-sheet"><i class="ti ti-x"></i></button></div><div id="sound-results" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 16px 16px;"></div></div></div>
+  <div class="sheet-overlay" id="wallpaper-sheet-overlay"><div class="sheet"><div class="sheet-handle"></div><div class="sheet-header"><h2>papel de parede</h2><button class="close-btn" id="close-wallpaper-sheet"><i class="ti ti-x"></i></button></div><p style="font-size:12.5px; color:var(--text-hint); margin:0 16px 12px;">só muda a tela pra você</p><div id="wallpaper-grid"></div></div></div>
+  <div class="sheet-overlay" id="profile-sheet-overlay"><div class="sheet" style="max-height:60vh;"><div class="sheet-handle"></div><div class="sheet-header"><h2>escolha seu emoji</h2><button class="close-btn" id="close-profile-sheet"><i class="ti ti-x"></i></button></div><div style="padding:0 16px 8px; display:flex; align-items:center; gap:12px; justify-content:center;"><span style="font-size:14px; color:var(--text-soft);">seu atual:</span><span id="profile-current-preview" style="font-size:32px; background:var(--bg); padding:4px 16px; border-radius:12px;"></span></div><div class="profile-emoji-grid" id="profile-emoji-grid"></div></div></div>
 
   <div class="toast" id="toast"></div>
-
 </div>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
@@ -995,10 +445,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot,
-  serverTimestamp, doc, updateDoc, getDoc, deleteDoc
+  serverTimestamp, doc, updateDoc, getDoc, deleteDoc, setDoc, where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ============ CONFIGURAÇÃO ============ */
+/* ============ CONFIG ============ */
 const firebaseConfig = {
   apiKey: "AIzaSyDgie1F8Y0vAJ8XbA7ja8wdns71F1gmBQw",
   authDomain: "rapidovai-59e6c.firebaseapp.com",
@@ -1019,172 +469,24 @@ const FAMILY_BASE = [
   { id: "will",       name: "Will",       emoji: "🔥", color: "#0F6E56", pin: "0000" },
 ];
 
-// ============ FUNÇÕES DE PERFIL ============
-function getProfileEmojis() {
-  try {
-    const saved = localStorage.getItem('familia_profile_emojis');
-    if (saved) return JSON.parse(saved);
-  } catch(e) {}
-  return {};
-}
-
-function saveProfileEmoji(id, emoji) {
-  const profiles = getProfileEmojis();
-  profiles[id] = emoji;
-  localStorage.setItem('familia_profile_emojis', JSON.stringify(profiles));
-}
-
-function getPersonEmoji(personId) {
-  const base = FAMILY_BASE.find(p => p.id === personId);
-  if (!base) return "👤";
-  const profiles = getProfileEmojis();
-  return profiles[personId] || base.emoji;
-}
-
-function getPersonName(personId) {
-  const base = FAMILY_BASE.find(p => p.id === personId);
-  return base ? base.name : personId;
-}
-
-function getPersonColor(personId) {
-  const base = FAMILY_BASE.find(p => p.id === personId);
-  return base ? base.color : "#888780";
-}
-
-function findPerson(id){
-  return FAMILY_BASE.find(p => p.id === id);
-}
-
-const PROFILE_EMOJIS = [
-  "😀","😁","😂","🤣","😊","😍","🥰","😘","😜","🤪","😎","🥳","🤩","😇","🙃","😉","😏","😒","😢","😭","😡","🤬","😱","😴","🤔","🙄","😬","🥹","🤯","🫠","😮","😳","🥺","😤","🤫","🤭","😋","😛","🤤","🤗",
-  "👴","👵","👨","👩","🧑","👦","👧","🧒","👶","👨‍🦰","👩‍🦰",
-  "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦆","🦅","🦉","🐺","🐗","🐴","🦄","🐝","🦋","🐢","🐍","🐙","🐳","🐬","🐠","🦈","🐊","🐘","🦒","🦓","🐄","🐕",
-  "❤️","💚","💙","💛","🧡","💜","🖤","🤍","💕","💞","💖","✨","🔥","🎉","🎊","💯","⭐","👀","🫡","🤌","✋","🤚","👊","🫂",
-  "🍕","🍔","🍟","🌮","🌭","🍿","🧀","🍗","🍖","🥩","🍳","🥞","🧇","🥐","🍞","🥖","🧁","🍰","🎂","🍩","🍪","🍫","🍬","🍭","🍦","🍨","🍧","🍉","🍓","🍇","🍌","🍎","🍊","🍍","🥭","☕","🍺","🍷","🥤","🧃",
-  "⚽","🏀","🏈","⚾","🎾","🏐","🏓","🏸","🥊","🎯","🎮","🎲","🎸","🎤","🎬","📷","🎨","🧩","🚗","✈️","🚀","🏖️","🏔️","🎆","🎄","🎁","🎈","🎀","🏆","🥇","🛒","💼","📱","💻","⏰","📅","💰","🛏️","🚿","🧹"
-];
-
-// ============ FIGURINHAS POR CATEGORIA ============
 const STICKER_CATEGORIES = {
-  "emoji": {
-    label: "😊 emoji",
-    stickers: [
-      { emoji: "😍", label: "amei" },
-      { emoji: "🤣", label: "rindo" },
-      { emoji: "😭", label: "chorando" },
-      { emoji: "🤩", label: "uau" },
-      { emoji: "😤", label: "bravo" },
-      { emoji: "🥳", label: "festa" },
-      { emoji: "😴", label: "sono" },
-      { emoji: "🤤", label: "fome" },
-      { emoji: "😘", label: "beijo" },
-      { emoji: "💪", label: "força" },
-      { emoji: "🙏", label: "orando" },
-      { emoji: "🙌", label: "comemorando" },
-      { emoji: "🤔", label: "pensando" },
-      { emoji: "😱", label: "surpreso" },
-      { emoji: "🥰", label: "amor" },
-      { emoji: "😎", label: "descolado" },
-      { emoji: "🤗", label: "abraço" },
-      { emoji: "😇", label: "anjinho" },
-      { emoji: "🥺", label: "pidão" },
-      { emoji: "🫣", label: "vergonha" },
-      { emoji: "🤭", label: "fofoca" },
-      { emoji: "🫠", label: "derretido" }
-    ]
-  },
-  "animais": {
-    label: "🐾 animais",
-    stickers: [
-      { emoji: "🐶", label: "cachorro" },
-      { emoji: "🐱", label: "gato" },
-      { emoji: "🐰", label: "coelho" },
-      { emoji: "🦊", label: "raposa" },
-      { emoji: "🐻", label: "urso" },
-      { emoji: "🐼", label: "panda" },
-      { emoji: "🐨", label: "coala" },
-      { emoji: "🦁", label: "leão" },
-      { emoji: "🐮", label: "vaca" },
-      { emoji: "🐷", label: "porco" },
-      { emoji: "🐸", label: "sapo" },
-      { emoji: "🐵", label: "macaco" },
-      { emoji: "🐔", label: "galinha" },
-      { emoji: "🐧", label: "pinguim" },
-      { emoji: "🐦", label: "passarinho" },
-      { emoji: "🦄", label: "unicórnio" },
-      { emoji: "🐝", label: "abelha" },
-      { emoji: "🦋", label: "borboleta" }
-    ]
-  },
-  "comida": {
-    label: "🍕 comida",
-    stickers: [
-      { emoji: "🍕", label: "pizza" },
-      { emoji: "🍔", label: "hambúrguer" },
-      { emoji: "🍟", label: "fritas" },
-      { emoji: "🌮", label: "taco" },
-      { emoji: "🍿", label: "pipoca" },
-      { emoji: "🍗", label: "frango" },
-      { emoji: "🍳", label: "ovo" },
-      { emoji: "🥞", label: "panqueca" },
-      { emoji: "🍰", label: "bolo" },
-      { emoji: "🎂", label: "aniversário" },
-      { emoji: "🍩", label: "donut" },
-      { emoji: "🍪", label: "biscoito" },
-      { emoji: "🍫", label: "chocolate" },
-      { emoji: "🍦", label: "sorvete" },
-      { emoji: "🍉", label: "melancia" },
-      { emoji: "🍓", label: "morango" },
-      { emoji: "🍌", label: "banana" },
-      { emoji: "🍎", label: "maçã" },
-      { emoji: "☕", label: "café" },
-      { emoji: "🍺", label: "cerveja" },
-      { emoji: "🥤", label: "refri" }
-    ]
-  },
-  "atividades": {
-    label: "⚽ atividades",
-    stickers: [
-      { emoji: "⚽", label: "futebol" },
-      { emoji: "🏀", label: "basquete" },
-      { emoji: "🎯", label: "alvo" },
-      { emoji: "🎮", label: "video game" },
-      { emoji: "🎲", label: "dado" },
-      { emoji: "🎸", label: "guitarra" },
-      { emoji: "🎤", label: "cantar" },
-      { emoji: "🎬", label: "cinema" },
-      { emoji: "📷", label: "foto" },
-      { emoji: "🎨", label: "arte" },
-      { emoji: "🧩", label: "quebra-cabeça" },
-      { emoji: "🚗", label: "carro" },
-      { emoji: "✈️", label: "avião" },
-      { emoji: "🚀", label: "foguete" },
-      { emoji: "🏖️", label: "praia" },
-      { emoji: "🏔️", label: "montanha" },
-      { emoji: "🎆", label: "fogos" },
-      { emoji: "🎄", label: "natal" },
-      { emoji: "🎁", label: "presente" },
-      { emoji: "🏆", label: "troféu" },
-      { emoji: "🥇", label: "medalha" }
-    ]
-  }
+  "emoji": { label: "😊 emoji", stickers: [{emoji:"😍",label:"amei"},{emoji:"🤣",label:"rindo"},{emoji:"😭",label:"chorando"},{emoji:"🤩",label:"uau"},{emoji:"😤",label:"bravo"},{emoji:"🥳",label:"festa"},{emoji:"😴",label:"sono"},{emoji:"🤤",label:"fome"},{emoji:"😘",label:"beijo"},{emoji:"💪",label:"força"},{emoji:"🙏",label:"orando"},{emoji:"🙌",label:"comemorando"},{emoji:"🤔",label:"pensando"},{emoji:"😱",label:"surpreso"},{emoji:"🥰",label:"amor"},{emoji:"😎",label:"descolado"},{emoji:"🤗",label:"abraço"},{emoji:"😇",label:"anjinho"},{emoji:"🥺",label:"pidão"},{emoji:"🫣",label:"vergonha"},{emoji:"🤭",label:"fofoca"},{emoji:"🫠",label:"derretido"}] },
+  "animais": { label: "🐾 animais", stickers: [{emoji:"🐶",label:"cachorro"},{emoji:"🐱",label:"gato"},{emoji:"🐰",label:"coelho"},{emoji:"🦊",label:"raposa"},{emoji:"🐻",label:"urso"},{emoji:"🐼",label:"panda"},{emoji:"🐨",label:"coala"},{emoji:"🦁",label:"leão"},{emoji:"🐮",label:"vaca"},{emoji:"🐷",label:"porco"},{emoji:"🐸",label:"sapo"},{emoji:"🐵",label:"macaco"},{emoji:"🐔",label:"galinha"},{emoji:"🐧",label:"pinguim"},{emoji:"🐦",label:"passarinho"},{emoji:"🦄",label:"unicórnio"},{emoji:"🐝",label:"abelha"},{emoji:"🦋",label:"borboleta"}] },
+  "comida": { label: "🍕 comida", stickers: [{emoji:"🍕",label:"pizza"},{emoji:"🍔",label:"hambúrguer"},{emoji:"🍟",label:"fritas"},{emoji:"🌮",label:"taco"},{emoji:"🍿",label:"pipoca"},{emoji:"🍗",label:"frango"},{emoji:"🍳",label:"ovo"},{emoji:"🥞",label:"panqueca"},{emoji:"🍰",label:"bolo"},{emoji:"🎂",label:"aniversário"},{emoji:"🍩",label:"donut"},{emoji:"🍪",label:"biscoito"},{emoji:"🍫",label:"chocolate"},{emoji:"🍦",label:"sorvete"},{emoji:"🍉",label:"melancia"},{emoji:"🍓",label:"morango"},{emoji:"🍌",label:"banana"},{emoji:"🍎",label:"maçã"},{emoji:"☕",label:"café"},{emoji:"🍺",label:"cerveja"},{emoji:"🥤",label:"refri"}] },
+  "atividades": { label: "⚽ atividades", stickers: [{emoji:"⚽",label:"futebol"},{emoji:"🏀",label:"basquete"},{emoji:"🎯",label:"alvo"},{emoji:"🎮",label:"video game"},{emoji:"🎲",label:"dado"},{emoji:"🎸",label:"guitarra"},{emoji:"🎤",label:"cantar"},{emoji:"🎬",label:"cinema"},{emoji:"📷",label:"foto"},{emoji:"🎨",label:"arte"},{emoji:"🧩",label:"quebra-cabeça"},{emoji:"🚗",label:"carro"},{emoji:"✈️",label:"avião"},{emoji:"🚀",label:"foguete"},{emoji:"🏖️",label:"praia"},{emoji:"🏔️",label:"montanha"},{emoji:"🎆",label:"fogos"},{emoji:"🎄",label:"natal"},{emoji:"🎁",label:"presente"},{emoji:"🏆",label:"troféu"},{emoji:"🥇",label:"medalha"}] }
 };
 
 const SOUNDS = [
-  { id: "risada",   label: "risada 😂",    gen: "laugh" },
-  { id: "aplauso",  label: "aplausos 👏",  gen: "applause" },
-  { id: "tcham",    label: "tcham! 🎵",    gen: "tada" },
-  { id: "cachorro", label: "cachorro 🐶",  gen: "dog" },
-  { id: "gato",     label: "gato 🐱",      gen: "cat" },
-  { id: "passaro",  label: "passarinho 🐦", gen: "bird" },
-  { id: "chuva",    label: "chuva 🌧️",     gen: "rain" },
-  { id: "buzina",   label: "buzina 📯",    gen: "honk" },
+  { id: "risada", label: "risada 😂", gen: "laugh" }, { id: "aplauso", label: "aplausos 👏", gen: "applause" },
+  { id: "tcham", label: "tcham! 🎵", gen: "tada" }, { id: "cachorro", label: "cachorro 🐶", gen: "dog" },
+  { id: "gato", label: "gato 🐱", gen: "cat" }, { id: "passaro", label: "passarinho 🐦", gen: "bird" },
+  { id: "chuva", label: "chuva 🌧️", gen: "rain" }, { id: "buzina", label: "buzina 📯", gen: "honk" }
 ];
 
 const TENOR_KEY = "LIVDSRZULELA";
 const QUICK_EMOJIS = ["😂","❤️","🔥","😮","🎉","👍"];
+const PROFILE_EMOJIS = ["😀","😁","😂","🤣","😊","😍","🥰","😘","😜","🤪","😎","🥳","🤩","😇","🙃","😉","😏","😒","😢","😭","😡","🤬","😱","😴","🤔","🙄","😬","🥹","🤯","🫠","😮","😳","🥺","😤","🤫","🤭","😋","😛","🤤","🤗","👴","👵","🐶","🐱","🐰","🦊","🐻","🐼","🐨","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦄","🐝","🦋","🍕","🍔","🍟","🌮","🍿","🍗","🍳","🥞","🍰","🎂","🍩","🍪","🍫","🍦","🍉","🍓","🍌","🍎","☕","🍺","🥤","⚽","🏀","🎯","🎮","🎸","🎤","🎬","📷","🎨","🧩","🚗","✈️","🚀","🏖️","🎆","🎄","🎁","🏆","🥇"];
 
-/* ============ INIT ============ */
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
 
@@ -1193,205 +495,154 @@ let selectedPersonForPin = null;
 let pinBuffer = "";
 let unsubscribeMessages = null;
 let activeReactionPopover = null;
-let pendingPhotoFile = null;
-let pendingPhotoDataUrl = null;
+let editingMessageId = null;
+let replyToMessage = null;
+let pendingMediaFile = null;
+let pendingMediaDataUrl = null;
+let isRecording = false;
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingStartTime = 0;
+let typingTimeout = null;
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
-function showScreen(id){
-  $$('.screen').forEach(s => s.classList.remove('active'));
-  $(id).classList.add('active');
-}
+function showToast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
+function showScreen(id){ $$('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); }
+function findPerson(id){ return FAMILY_BASE.find(p=>p.id===id); }
 
-function showToast(msg){
-  const t = $('#toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 1800);
-}
+// Profile
+function getProfileEmojis(){ try{ return JSON.parse(localStorage.getItem('familia_profile_emojis')||'{}'); }catch(e){return {};} }
+function saveProfileEmoji(id, emoji){ const p=getProfileEmojis(); p[id]=emoji; localStorage.setItem('familia_profile_emojis',JSON.stringify(p)); }
+function getPersonEmoji(id){ const base=FAMILY_BASE.find(p=>p.id===id); if(!base)return "👤"; const p=getProfileEmojis(); return p[id]||base.emoji; }
+function getPersonName(id){ const base=FAMILY_BASE.find(p=>p.id===id); return base?base.name:id; }
+function getPersonColor(id){ const base=FAMILY_BASE.find(p=>p.id===id); return base?base.color:"#888780"; }
 
-/* ============ LOGIN ============ */
+// Dark Mode
+function getTheme(){ try{ return localStorage.getItem('familia_theme')||'light'; }catch(e){return 'light';} }
+function setTheme(theme){ document.documentElement.setAttribute('data-theme', theme); try{ localStorage.setItem('familia_theme',theme); }catch(e){} }
+$('#dark-mode-btn').addEventListener('click', ()=>{ const current=getTheme(); setTheme(current==='light'?'dark':'light'); });
+
+// ============ LOGIN ============
 function renderPersonGrid(){
-  const grid = $('#person-grid');
-  grid.innerHTML = "";
-  FAMILY_BASE.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'person-card';
-    const emoji = getPersonEmoji(p.id);
-    card.innerHTML = `
-      <div class="avatar" style="background:${p.color}22;">
-        <span class="avatar-emoji">${emoji}</span>
-        <button class="profile-edit-btn" data-id="${p.id}" aria-label="Mudar emoji"><i class="ti ti-edit"></i></button>
-      </div>
-      <div class="pname">${p.name}</div>
-    `;
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('.profile-edit-btn')) return;
-      selectPerson(p);
-    });
-    const editBtn = card.querySelector('.profile-edit-btn');
-    editBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openProfilePicker(p.id);
-    });
+  const grid=$('#person-grid'); grid.innerHTML="";
+  FAMILY_BASE.forEach(p=>{
+    const card=document.createElement('div'); card.className='person-card';
+    const emoji=getPersonEmoji(p.id);
+    card.innerHTML=`<div class="avatar" style="background:${p.color}22;"><span class="avatar-emoji">${emoji}</span><button class="profile-edit-btn" data-id="${p.id}"><i class="ti ti-edit"></i></button></div><div class="pname">${p.name}</div>`;
+    card.addEventListener('click',(e)=>{ if(e.target.closest('.profile-edit-btn'))return; selectPerson(p); });
+    card.querySelector('.profile-edit-btn').addEventListener('click',(e)=>{ e.stopPropagation(); openProfilePicker(p.id); });
     grid.appendChild(card);
   });
 }
-
-function openProfilePicker(personId) {
-  const overlay = $('#profile-sheet-overlay');
-  const grid = $('#profile-emoji-grid');
-  const preview = $('#profile-current-preview');
-  
-  const currentEmoji = getPersonEmoji(personId);
-  preview.textContent = currentEmoji;
-  
-  grid.innerHTML = "";
-  
-  const currentBtn = document.createElement('button');
-  currentBtn.textContent = currentEmoji;
-  currentBtn.className = 'current-emoji';
-  currentBtn.addEventListener('click', () => {
-    overlay.classList.remove('active');
-  });
-  grid.appendChild(currentBtn);
-  
-  PROFILE_EMOJIS.forEach(emoji => {
-    if (emoji === currentEmoji) return;
-    const btn = document.createElement('button');
-    btn.textContent = emoji;
-    btn.addEventListener('click', () => {
-      saveProfileEmoji(personId, emoji);
-      renderPersonGrid();
-      renderHeaderAvatars();
-      if (currentUser && currentUser.id === personId) {
-        currentUser.emoji = emoji;
-      }
-      showToast(`perfil atualizado! ${emoji}`);
-      overlay.classList.remove('active');
-    });
-    grid.appendChild(btn);
-  });
-  
+function openProfilePicker(id){
+  const overlay=$('#profile-sheet-overlay'); const grid=$('#profile-emoji-grid'); const preview=$('#profile-current-preview');
+  const current=getPersonEmoji(id); preview.textContent=current; grid.innerHTML="";
+  const curBtn=document.createElement('button'); curBtn.textContent=current; curBtn.className='current-emoji'; curBtn.addEventListener('click',()=>overlay.classList.remove('active')); grid.appendChild(curBtn);
+  PROFILE_EMOJIS.forEach(emoji=>{ if(emoji===current)return; const btn=document.createElement('button'); btn.textContent=emoji; btn.addEventListener('click',()=>{ saveProfileEmoji(id,emoji); renderPersonGrid(); renderHeaderAvatars(); if(currentUser&&currentUser.id===id)currentUser.emoji=emoji; showToast(`perfil atualizado! ${emoji}`); overlay.classList.remove('active'); }); grid.appendChild(btn); });
   overlay.classList.add('active');
 }
+$('#close-profile-sheet').addEventListener('click',()=>$('#profile-sheet-overlay').classList.remove('active'));
+$('#profile-sheet-overlay').addEventListener('click',(e)=>{ if(e.target.id==='profile-sheet-overlay')$('#profile-sheet-overlay').classList.remove('active'); });
 
-$('#close-profile-sheet').addEventListener('click', () => {
-  $('#profile-sheet-overlay').classList.remove('active');
-});
-$('#profile-sheet-overlay').addEventListener('click', (e) => {
-  if (e.target.id === 'profile-sheet-overlay') {
-    $('#profile-sheet-overlay').classList.remove('active');
-  }
-});
-
-function selectPerson(p){
-  selectedPersonForPin = p;
-  pinBuffer = "";
-  updatePinDots();
-  $('#pin-greeting').textContent = `oi, ${p.name}! qual seu PIN?`;
-  $('#login-error').textContent = "";
-  $('#person-grid').style.display = 'none';
-  $('#pin-section').classList.add('active');
-}
-
+function selectPerson(p){ selectedPersonForPin=p; pinBuffer=""; updatePinDots(); $('#pin-greeting').textContent=`oi, ${p.name}! qual seu PIN?`; $('#login-error').textContent=""; $('#person-grid').style.display='none'; $('#pin-section').classList.add('active'); }
 function renderKeypad(){
-  const keypad = $('#pin-keypad');
-  keypad.innerHTML = "";
-  const keys = ["1","2","3","4","5","6","7","8","9","ghost","0","del"];
-  keys.forEach(k => {
-    const btn = document.createElement('button');
-    if (k === "ghost"){
-      btn.className = 'pin-key ghost';
-    } else if (k === "del"){
-      btn.className = 'pin-key';
-      btn.innerHTML = '<i class="ti ti-backspace"></i>';
-      btn.addEventListener('click', () => {
-        pinBuffer = pinBuffer.slice(0, -1);
-        updatePinDots();
-      });
-    } else {
-      btn.className = 'pin-key';
-      btn.textContent = k;
-      btn.addEventListener('click', () => onPinDigit(k));
-    }
+  const keypad=$('#pin-keypad'); keypad.innerHTML="";
+  ["1","2","3","4","5","6","7","8","9","ghost","0","del"].forEach(k=>{
+    const btn=document.createElement('button');
+    if(k==="ghost"){ btn.className='pin-key ghost'; }
+    else if(k==="del"){ btn.className='pin-key'; btn.innerHTML='<i class="ti ti-backspace"></i>'; btn.addEventListener('click',()=>{ pinBuffer=pinBuffer.slice(0,-1); updatePinDots(); }); }
+    else { btn.className='pin-key'; btn.textContent=k; btn.addEventListener('click',()=>onPinDigit(k)); }
     keypad.appendChild(btn);
   });
 }
+function updatePinDots(){ const dots=$$('.pin-dot'); dots.forEach((d,i)=>d.classList.toggle('filled', i<pinBuffer.length)); }
+function onPinDigit(digit){ if(pinBuffer.length>=4)return; pinBuffer+=digit; updatePinDots(); if(pinBuffer.length===4)setTimeout(checkPin,150); }
+function checkPin(){ if(pinBuffer===selectedPersonForPin.pin){ const emoji=getPersonEmoji(selectedPersonForPin.id); currentUser={...selectedPersonForPin, emoji}; enterChat(); } else { $('#login-error').textContent="PIN incorreto, tenta de novo 🤔"; pinBuffer=""; updatePinDots(); } }
+$('#back-link').addEventListener('click',()=>{ $('#pin-section').classList.remove('active'); $('#person-grid').style.display='grid'; selectedPersonForPin=null; pinBuffer=""; });
 
-function updatePinDots(){
-  const dots = $$('.pin-dot');
-  dots.forEach((d, i) => d.classList.toggle('filled', i < pinBuffer.length));
+// ============ CHAT ============
+function enterChat(){ showScreen('#screen-chat'); renderHeaderAvatars(); listenToMessages(); updateStatus(true); setInterval(()=>updateStatus(true), 10000); }
+function renderHeaderAvatars(){ const wrap=$('#header-avatars'); wrap.innerHTML=""; FAMILY_BASE.slice(0,4).forEach(p=>{ const d=document.createElement('div'); d.className='mini-avatar'; d.style.background=p.color+'33'; d.textContent=getPersonEmoji(p.id); wrap.appendChild(d); }); }
+$('#logout-btn').addEventListener('click',()=>{ if(unsubscribeMessages)unsubscribeMessages(); currentUser=null; selectedPersonForPin=null; pinBuffer=""; $('#pin-section').classList.remove('active'); $('#person-grid').style.display='grid'; showScreen('#screen-login'); });
+
+// Status (Online / Last Seen / Typing)
+async function updateStatus(online){
+  if(!currentUser)return;
+  try{
+    const ref=doc(db, "status", currentUser.id);
+    await setDoc(ref, { online, lastSeen: serverTimestamp(), name: currentUser.name }, { merge: true });
+  }catch(e){}
+}
+async function updateTyping(isTyping){
+  if(!currentUser)return;
+  try{
+    const ref=doc(db, "status", currentUser.id);
+    await setDoc(ref, { typing: isTyping, lastSeen: serverTimestamp() }, { merge: true });
+  }catch(e){}
 }
 
-function onPinDigit(digit){
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += digit;
-  updatePinDots();
-  if (pinBuffer.length === 4){
-    setTimeout(checkPin, 150);
-  }
-}
-
-function checkPin(){
-  if (pinBuffer === selectedPersonForPin.pin){
-    const emoji = getPersonEmoji(selectedPersonForPin.id);
-    currentUser = { 
-      ...selectedPersonForPin, 
-      emoji: emoji 
-    };
-    enterChat();
-  } else {
-    $('#login-error').textContent = "PIN incorreto, tenta de novo 🤔";
-    pinBuffer = "";
-    updatePinDots();
-  }
-}
-
-$('#back-link').addEventListener('click', () => {
-  $('#pin-section').classList.remove('active');
-  $('#person-grid').style.display = 'grid';
-  selectedPersonForPin = null;
-  pinBuffer = "";
-});
-
-/* ============ CHAT ============ */
-function enterChat(){
-  showScreen('#screen-chat');
-  renderHeaderAvatars();
-  listenToMessages();
-}
-
-function renderHeaderAvatars(){
-  const wrap = $('#header-avatars');
-  wrap.innerHTML = "";
-  FAMILY_BASE.slice(0, 4).forEach(p => {
-    const d = document.createElement('div');
-    d.className = 'mini-avatar';
-    d.style.background = p.color + '33';
-    d.textContent = getPersonEmoji(p.id);
-    wrap.appendChild(d);
+// Listen to typing status
+function listenTypingStatus(){
+  onSnapshot(collection(db, "status"), (snapshot) => {
+    const typingUsers = [];
+    const onlineUsers = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if(data.online && data.typing && data.name && data.name !== currentUser?.name){
+        typingUsers.push(data.name);
+      }
+      if(data.online && data.name && data.name !== currentUser?.name){
+        onlineUsers.push(data.name);
+      }
+    });
+    const statusEl = $('#typing-status');
+    if(typingUsers.length > 0){
+      statusEl.textContent = `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'estão' : 'está'} digitando...`;
+    } else if(onlineUsers.length > 0){
+      statusEl.textContent = `${onlineUsers.join(', ')} ${onlineUsers.length > 1 ? 'estão' : 'está'} online`;
+    } else {
+      statusEl.textContent = '';
+    }
   });
 }
 
-$('#logout-btn').addEventListener('click', () => {
-  if (unsubscribeMessages) unsubscribeMessages();
-  currentUser = null;
-  selectedPersonForPin = null;
-  pinBuffer = "";
-  $('#pin-section').classList.remove('active');
-  $('#person-grid').style.display = 'grid';
-  showScreen('#screen-login');
-});
+// Mark messages as read
+async function markAsRead(messages){
+  if(!currentUser)return;
+  const batch = [];
+  messages.forEach(msg => {
+    if(msg.authorId !== currentUser.id && (!msg.readBy || !msg.readBy.includes(currentUser.id))){
+      batch.push(msg);
+    }
+  });
+  if(batch.length === 0)return;
+  // We'll mark individually to avoid transaction complexity
+  for(const msg of batch){
+    try {
+      const ref = doc(db, "messages", msg.id);
+      const snap = await getDoc(ref);
+      if(snap.exists()){
+        const data = snap.data();
+        const readBy = data.readBy || [];
+        if(!readBy.includes(currentUser.id)){
+          readBy.push(currentUser.id);
+          await updateDoc(ref, { readBy });
+        }
+      }
+    }catch(e){}
+  }
+}
 
-/* ============ MENSAGENS ============ */
+// ============ MESSAGES ============
 function listenToMessages(){
   const q = query(collection(db, "messages"), orderBy("createdAt", "asc"), limit(200));
-  unsubscribeMessages = onSnapshot(q, (snapshot) => {
+  unsubscribeMessages = onSnapshot(q, async (snapshot) => {
     const container = $('#messages-container');
-    container.innerHTML = "";
+    const allMsgs = [];
     let lastDate = null;
+    container.innerHTML = "";
     snapshot.forEach(docSnap => {
       const msg = docSnap.data();
       const msgId = docSnap.id;
@@ -1404,20 +655,21 @@ function listenToMessages(){
         container.appendChild(divider);
         lastDate = dateStr;
       }
-      container.appendChild(renderMessage(msgId, msg, d));
+      const el = renderMessage(msgId, msg, d);
+      container.appendChild(el);
+      allMsgs.push({ id: msgId, authorId: msg.authorId, readBy: msg.readBy || [] });
     });
     container.scrollTop = container.scrollHeight + 9999;
-  }, (err) => {
-    console.error(err);
-    showToast("erro ao carregar mensagens 😕");
-  });
+    // Mark as read
+    await markAsRead(allMsgs);
+  }, (err) => { console.error(err); showToast("erro ao carregar mensagens 😕"); });
+  listenTypingStatus();
 }
 
 function renderMessage(msgId, msg, date){
   const authorEmoji = getPersonEmoji(msg.authorId);
   const authorName = getPersonName(msg.authorId);
   const authorColor = getPersonColor(msg.authorId);
-  
   const isMine = currentUser && msg.authorId === currentUser.id;
 
   const row = document.createElement('div');
@@ -1426,24 +678,61 @@ function renderMessage(msgId, msg, date){
   let bubbleInner = "";
   let bubbleClass = "msg-bubble";
 
+  // Reply Quote
+  let replyHtml = "";
+  if(msg.replyTo){
+    const replyAuthor = getPersonName(msg.replyTo.authorId);
+    const replyText = msg.replyTo.text || msg.replyTo.emoji || "mensagem";
+    replyHtml = `<div class="reply-quote"><span class="reply-author">${replyAuthor}:</span> ${replyText}</div>`;
+  }
+
   if (msg.type === 'text'){
-    bubbleInner = escapeHtml(msg.text || "") + (msg.editedAt ? '<span class="edited-tag"> (editado)</span>' : '');
+    bubbleInner = replyHtml + escapeHtml(msg.text || "") + (msg.editedAt ? '<span class="edited-tag"> (editado)</span>' : '');
   } else if (msg.type === 'photo'){
     bubbleClass += " photo-bubble";
-    bubbleInner = `<img src="${msg.url}" alt="foto" loading="lazy" style="max-width:100%;">`;
+    bubbleInner = replyHtml + `<img src="${msg.url}" alt="foto" loading="lazy" style="max-width:100%;">`;
+  } else if (msg.type === 'video'){
+    bubbleClass += " video-bubble";
+    bubbleInner = replyHtml + `<video src="${msg.url}" controls playsinline style="max-width:100%; max-height:300px;"></video>`;
   } else if (msg.type === 'gif' || msg.type === 'meme'){
     bubbleClass += " gif-bubble";
-    bubbleInner = `<img src="${msg.url}" alt="${msg.type === 'meme' ? 'meme' : 'GIF'}" loading="lazy">`;
+    bubbleInner = replyHtml + `<img src="${msg.url}" alt="${msg.type === 'meme' ? 'meme' : 'GIF'}" loading="lazy">`;
+  } else if (msg.type === 'audio'){
+    bubbleClass += " audio-bubble";
+    const audioId = `audio-${msgId}`;
+    bubbleInner = replyHtml + `
+      <i class="ti ti-player-play" style="font-size:18px;" id="play-${audioId}"></i>
+      <div class="audio-wave">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <span class="audio-time" id="time-${audioId}">0:00</span>
+      <audio id="${audioId}" src="${msg.url}" style="display:none;"></audio>
+    `;
   } else if (msg.type === 'sound'){
     bubbleClass += " sound-bubble";
-    bubbleInner = `<i class="ti ti-player-play-filled" style="font-size:14px;"></i> <span>${escapeHtml(msg.label || 'som')}</span>`;
+    bubbleInner = replyHtml + `<i class="ti ti-player-play-filled" style="font-size:14px;"></i> <span>${escapeHtml(msg.label || 'som')}</span>`;
   } else if (msg.type === 'sticker'){
     bubbleClass += " sticker-bubble";
     bubbleInner = msg.emoji || "🙂";
   }
 
-  const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  // Status icon (mine)
+  let statusIcon = "";
+  if(isMine){
+    const readBy = msg.readBy || [];
+    if(readBy.length > 1 || (readBy.length === 1 && !readBy.includes(currentUser.id))){
+      // At least someone else read it (or user read their own? actually if readBy includes other ids)
+      const others = readBy.filter(id => id !== currentUser.id);
+      if(others.length > 0) statusIcon = '✅✅';
+      else statusIcon = '✅';
+    } else if(readBy.length === 1 && readBy.includes(currentUser.id)){
+      statusIcon = '✅';
+    } else {
+      statusIcon = '⏳';
+    }
+  }
 
+  const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const avatarHtml = isMine ? "" : `<div class="msg-avatar" style="background:${authorColor}22;" title="${authorName}">${authorEmoji}</div>`;
   const authorHtml = isMine ? "" : `<p class="msg-author" style="color:${authorColor};">${escapeHtml(authorName)}</p>`;
 
@@ -1453,11 +742,44 @@ function renderMessage(msgId, msg, date){
       ${authorHtml}
       <div class="${bubbleClass}" data-msg-id="${msgId}">${bubbleInner}</div>
       <div class="reactions-bar" id="reactions-${msgId}"></div>
-      <p class="msg-time">${timeStr}</p>
+      <p class="msg-time">${timeStr} <span class="status-icon">${statusIcon}</span></p>
     </div>
   `;
 
   const bubbleEl = row.querySelector('.msg-bubble');
+
+  // Audio logic
+  if(msg.type === 'audio'){
+    const audioEl = row.querySelector(`#audio-${msgId}`);
+    const playBtn = row.querySelector(`#play-${msgId}`);
+    const timeDisplay = row.querySelector(`#time-${msgId}`);
+    if(audioEl){
+      audioEl.addEventListener('loadedmetadata', () => {
+        const mins = Math.floor(audioEl.duration / 60);
+        const secs = Math.floor(audioEl.duration % 60);
+        timeDisplay.textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
+      });
+      audioEl.addEventListener('timeupdate', () => {
+        const mins = Math.floor(audioEl.currentTime / 60);
+        const secs = Math.floor(audioEl.currentTime % 60);
+        timeDisplay.textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
+      });
+      playBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if(audioEl.paused){
+          audioEl.play();
+          playBtn.className = 'ti ti-player-pause';
+        } else {
+          audioEl.pause();
+          playBtn.className = 'ti ti-player-play';
+        }
+      });
+      audioEl.addEventListener('ended', () => {
+        playBtn.className = 'ti ti-player-play';
+      });
+      bubbleEl.style.cursor = 'default';
+    }
+  }
 
   if (msg.type === 'sound'){
     bubbleEl.addEventListener('click', () => playGeneratedSound(msg.gen));
@@ -1474,18 +796,12 @@ function renderMessage(msgId, msg, date){
   return row;
 }
 
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
+function escapeHtml(str){ const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
 
 function renderReactions(el, reactions, msgId){
   el.innerHTML = "";
   const counts = {};
-  Object.values(reactions).forEach(emoji => {
-    counts[emoji] = (counts[emoji] || 0) + 1;
-  });
+  Object.values(reactions).forEach(emoji => { counts[emoji] = (counts[emoji]||0)+1; });
   Object.entries(counts).forEach(([emoji, count]) => {
     const mine = currentUser && reactions[currentUser.id] === emoji;
     const chip = document.createElement('span');
@@ -1498,649 +814,317 @@ function renderReactions(el, reactions, msgId){
 
 function openReactionPopover(anchorEl, msgId, msg, isMine){
   closeReactionPopover();
-  const pop = document.createElement('div');
-  pop.className = 'reaction-popover';
-
-  const emojiRow = document.createElement('div');
-  emojiRow.className = 'popover-emoji-row';
+  const pop = document.createElement('div'); pop.className = 'reaction-popover';
+  const emojiRow = document.createElement('div'); emojiRow.className = 'popover-emoji-row';
   QUICK_EMOJIS.forEach(emoji => {
-    const btn = document.createElement('button');
-    btn.textContent = emoji;
-    btn.addEventListener('click', () => {
-      toggleReaction(msgId, emoji);
-      closeReactionPopover();
-    });
+    const btn = document.createElement('button'); btn.textContent = emoji;
+    btn.addEventListener('click', () => { toggleReaction(msgId, emoji); closeReactionPopover(); });
     emojiRow.appendChild(btn);
   });
   pop.appendChild(emojiRow);
+  const actionsRow = document.createElement('div'); actionsRow.className = 'popover-actions-row';
+  
+  // Reply
+  const replyBtn = document.createElement('button'); replyBtn.className = 'popover-action-btn';
+  replyBtn.innerHTML = '<i class="ti ti-corner-up-left" aria-hidden="true"></i> responder';
+  replyBtn.addEventListener('click', () => {
+    closeReactionPopover();
+    setReplyTo(msgId, msg);
+  });
+  actionsRow.appendChild(replyBtn);
 
-  if (isMine){
-    const actionsRow = document.createElement('div');
-    actionsRow.className = 'popover-actions-row';
-
+  if(isMine){
     if (msg.type === 'text'){
-      const editBtn = document.createElement('button');
-      editBtn.className = 'popover-action-btn';
+      const editBtn = document.createElement('button'); editBtn.className = 'popover-action-btn';
       editBtn.innerHTML = '<i class="ti ti-edit" aria-hidden="true"></i> editar';
-      editBtn.addEventListener('click', () => {
-        closeReactionPopover();
-        startEditMessage(msgId, msg.text || "");
-      });
+      editBtn.addEventListener('click', () => { closeReactionPopover(); startEditMessage(msgId, msg.text || ""); });
       actionsRow.appendChild(editBtn);
     }
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'popover-action-btn popover-action-danger';
+    const deleteBtn = document.createElement('button'); deleteBtn.className = 'popover-action-btn popover-action-danger';
     deleteBtn.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i> excluir';
-    deleteBtn.addEventListener('click', () => {
-      closeReactionPopover();
-      deleteMessage(msgId);
-    });
+    deleteBtn.addEventListener('click', () => { closeReactionPopover(); deleteMessage(msgId); });
     actionsRow.appendChild(deleteBtn);
-
-    pop.appendChild(actionsRow);
   }
-
-  anchorEl.style.position = 'relative';
-  anchorEl.appendChild(pop);
-  activeReactionPopover = pop;
-  setTimeout(() => {
-    document.addEventListener('click', closeReactionPopoverOnce, { once: true });
-  }, 50);
+  pop.appendChild(actionsRow);
+  anchorEl.style.position = 'relative'; anchorEl.appendChild(pop); activeReactionPopover = pop;
+  setTimeout(() => { document.addEventListener('click', closeReactionPopoverOnce, { once: true }); }, 50);
 }
-
-function closeReactionPopoverOnce(e){
-  closeReactionPopover();
-}
-
-function closeReactionPopover(){
-  if (activeReactionPopover){
-    activeReactionPopover.remove();
-    activeReactionPopover = null;
-  }
-}
+function closeReactionPopoverOnce(e){ closeReactionPopover(); }
+function closeReactionPopover(){ if(activeReactionPopover){ activeReactionPopover.remove(); activeReactionPopover = null; } }
 
 async function toggleReaction(msgId, emoji){
-  if (!currentUser) return;
-  const msgRef = doc(db, "messages", msgId);
-  const snap = await getDoc(msgRef);
-  if (!snap.exists()) return;
-  const data = snap.data();
-  const reactions = { ...(data.reactions || {}) };
-  if (reactions[currentUser.id] === emoji){
-    delete reactions[currentUser.id];
-  } else {
-    reactions[currentUser.id] = emoji;
-  }
-  await updateDoc(msgRef, { reactions });
+  if(!currentUser)return;
+  const ref=doc(db,"messages",msgId); const snap=await getDoc(ref); if(!snap.exists())return;
+  const data=snap.data(); const reactions={...(data.reactions||{})};
+  if(reactions[currentUser.id]===emoji) delete reactions[currentUser.id];
+  else reactions[currentUser.id]=emoji;
+  await updateDoc(ref, {reactions});
 }
 
-/* ============ EDITAR / DELETAR ============ */
-let editingMessageId = null;
+// ============ REPLY ============
+function setReplyTo(msgId, msg){
+  replyToMessage = { id: msgId, authorId: msg.authorId, text: msg.text || msg.emoji || 'mensagem' };
+  const bar = $('#reply-bar'); const info = $('#reply-info');
+  const authorName = getPersonName(msg.authorId);
+  info.innerHTML = `↩️ respondendo a <strong>${authorName}</strong>: ${msg.text || msg.emoji || 'mensagem'}`;
+  bar.classList.add('active');
+  textInput.focus();
+}
+function cancelReply(){ replyToMessage = null; $('#reply-bar').classList.remove('active'); }
+$('#reply-close').addEventListener('click', cancelReply);
 
+// ============ EDIT / DELETE ============
 function startEditMessage(msgId, currentText){
   editingMessageId = msgId;
   textInput.value = currentText;
   textInput.dispatchEvent(new Event('input'));
   textInput.focus();
-  showEditBanner(true);
+  $('#edit-bar').classList.add('active');
 }
-
-function cancelEditMessage(){
-  editingMessageId = null;
-  textInput.value = "";
-  textInput.dispatchEvent(new Event('input'));
-  showEditBanner(false);
-}
-
-function showEditBanner(show){
-  let banner = document.getElementById('edit-banner');
-  if (show){
-    if (!banner){
-      banner = document.createElement('div');
-      banner.id = 'edit-banner';
-      banner.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 14px; background:var(--teal-light); color:var(--teal-dark); font-size:12.5px; font-weight:500;';
-      banner.innerHTML = `<span><i class="ti ti-edit" style="vertical-align:-2px; margin-right:4px;" aria-hidden="true"></i>editando mensagem</span><button id="cancel-edit-btn" style="background:none; border:none; color:var(--teal-dark); font-size:12.5px; font-weight:500; cursor:pointer; text-decoration:underline;">cancelar</button>`;
-      $('#composer').insertAdjacentElement('beforebegin', banner);
-      banner.querySelector('#cancel-edit-btn').addEventListener('click', cancelEditMessage);
-    }
-  } else if (banner){
-    banner.remove();
-  }
-}
-
-async function saveEditedMessage(msgId, newText){
-  const msgRef = doc(db, "messages", msgId);
-  await updateDoc(msgRef, { text: newText, editedAt: serverTimestamp() });
-}
-
-async function deleteMessage(msgId){
-  if (editingMessageId === msgId) cancelEditMessage();
-  try {
-    await deleteDoc(doc(db, "messages", msgId));
-  } catch(err){
-    console.error(err);
-    showToast("erro ao excluir mensagem 😕");
-  }
-}
+function cancelEditMessage(){ editingMessageId = null; textInput.value=""; textInput.dispatchEvent(new Event('input')); $('#edit-bar').classList.remove('active'); }
+$('#edit-close').addEventListener('click', cancelEditMessage);
+async function saveEditedMessage(msgId, newText){ const ref=doc(db,"messages",msgId); await updateDoc(ref, { text: newText, editedAt: serverTimestamp() }); }
+async function deleteMessage(msgId){ if(editingMessageId===msgId)cancelEditMessage(); try{ await deleteDoc(doc(db,"messages",msgId)); }catch(err){ console.error(err); showToast("erro ao excluir 😕"); } }
 
 async function sendMessage(payload){
-  if (!currentUser) return;
-  await addDoc(collection(db, "messages"), {
-    authorId: currentUser.id,
-    createdAt: serverTimestamp(),
-    reactions: {},
-    ...payload
-  });
+  if(!currentUser)return;
+  const finalPayload = { authorId: currentUser.id, createdAt: serverTimestamp(), reactions: {}, ...payload };
+  if(replyToMessage){
+    finalPayload.replyTo = { authorId: replyToMessage.authorId, text: replyToMessage.text, id: replyToMessage.id };
+    cancelReply();
+  }
+  await addDoc(collection(db, "messages"), finalPayload);
 }
 
-/* ============ ENVIAR FOTO ============ */
-const photoInput = $('#photo-input');
-const photoPreviewBar = $('#photo-preview-bar');
-const photoPreviewImg = $('#photo-preview-img');
-const photoPreviewInfo = $('#photo-preview-info');
-const photoPreviewClose = $('#photo-preview-close');
-
-$('#photo-btn').addEventListener('click', () => {
-  photoInput.click();
-});
-
-photoInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  
-  // Verifica se é uma imagem
-  if (!file.type.startsWith('image/')) {
-    showToast('por favor, selecione uma imagem 📷');
-    photoInput.value = '';
-    return;
-  }
-  
-  // Limita tamanho (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    showToast('imagem muito grande (máx 5MB)');
-    photoInput.value = '';
-    return;
-  }
-  
-  pendingPhotoFile = file;
-  
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    pendingPhotoDataUrl = ev.target.result;
-    photoPreviewImg.src = pendingPhotoDataUrl;
-    photoPreviewInfo.textContent = file.name;
-    photoPreviewBar.classList.add('active');
-  };
-  reader.readAsDataURL(file);
-});
-
-photoPreviewClose.addEventListener('click', () => {
-  clearPendingPhoto();
-});
-
-function clearPendingPhoto() {
-  pendingPhotoFile = null;
-  pendingPhotoDataUrl = null;
-  photoPreviewBar.classList.remove('active');
-  photoPreviewImg.src = '';
-  photoInput.value = '';
-}
-
-async function sendPhoto() {
-  if (!pendingPhotoDataUrl) return;
-  
-  try {
-    // Envia a foto como mensagem com a URL base64
-    await sendMessage({ 
-      type: 'photo', 
-      url: pendingPhotoDataUrl 
-    });
-    clearPendingPhoto();
-    showToast('foto enviada! 📸');
-  } catch(err) {
-    console.error(err);
-    showToast('erro ao enviar foto 😕');
-  }
-}
-
-/* ============ COMPOSER ============ */
-const textInput = $('#text-input');
-const sendBtn = $('#send-btn');
-
+// ============ COMPOSER ============
+const textInput = $('#text-input'); const sendBtn = $('#send-btn');
 textInput.addEventListener('input', () => {
   const hasText = textInput.value.trim().length > 0;
-  const hasPhoto = pendingPhotoDataUrl !== null;
-  sendBtn.disabled = !(hasText || hasPhoto);
-  textInput.style.height = 'auto';
-  textInput.style.height = Math.min(textInput.scrollHeight, 90) + 'px';
+  const hasMedia = pendingMediaDataUrl !== null;
+  sendBtn.disabled = !(hasText || hasMedia || isRecording);
+  textInput.style.height = 'auto'; textInput.style.height = Math.min(textInput.scrollHeight, 90) + 'px';
+  // Typing indicator
+  clearTimeout(typingTimeout);
+  if(hasText){ updateTyping(true); }
+  typingTimeout = setTimeout(() => updateTyping(false), 2000);
 });
+textInput.addEventListener('blur', () => updateTyping(false));
 
 sendBtn.addEventListener('click', async () => {
   const text = textInput.value.trim();
-  
-  // Se tem foto pendente, envia foto primeiro
-  if (pendingPhotoDataUrl) {
-    await sendPhoto();
-    // Se também tem texto, envia depois
-    if (text) {
-      textInput.value = "";
-      sendBtn.disabled = true;
-      textInput.style.height = 'auto';
-      await sendMessage({ type: 'text', text });
-    }
+  if(isRecording)return;
+  if(pendingMediaDataUrl){
+    const isVideo = pendingMediaFile && pendingMediaFile.type.startsWith('video/');
+    await sendMessage({ type: isVideo ? 'video' : 'photo', url: pendingMediaDataUrl });
+    clearPendingMedia();
+    if(text){ textInput.value = ""; sendBtn.disabled = true; textInput.style.height = 'auto'; await sendMessage({ type: 'text', text }); }
     return;
   }
-  
-  if (!text) return;
-  textInput.value = "";
-  sendBtn.disabled = true;
-  textInput.style.height = 'auto';
-  if (editingMessageId){
-    const idToSave = editingMessageId;
-    cancelEditMessage();
-    await saveEditedMessage(idToSave, text);
-  } else {
-    await sendMessage({ type: 'text', text });
-  }
+  if(!text)return;
+  textInput.value = ""; sendBtn.disabled = true; textInput.style.height = 'auto';
+  if(editingMessageId){ const id=editingMessageId; cancelEditMessage(); await saveEditedMessage(id, text); }
+  else { await sendMessage({ type: 'text', text }); }
+});
+textInput.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendBtn.click(); } });
+
+// ============ MEDIA (Photo/Video) ============
+const attachInput = $('#attach-input'); const mediaPreviewBar = $('#media-preview-bar');
+const mediaPreviewImg = $('#media-preview-img'); const mediaPreviewVideo = $('#media-preview-video');
+const mediaPreviewInfo = $('#media-preview-info'); const mediaPreviewClose = $('#media-preview-close');
+
+$('#attach-btn').addEventListener('click', () => attachInput.click());
+attachInput.addEventListener('change', (e) => {
+  const file = e.target.files[0]; if(!file)return;
+  if(!file.type.startsWith('image/') && !file.type.startsWith('video/')){ showToast('selecione imagem ou vídeo 📎'); attachInput.value=''; return; }
+  if(file.size > 10 * 1024 * 1024){ showToast('arquivo muito grande (máx 10MB)'); attachInput.value=''; return; }
+  pendingMediaFile = file;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    pendingMediaDataUrl = ev.target.result;
+    if(file.type.startsWith('image/')){
+      mediaPreviewImg.src = pendingMediaDataUrl; mediaPreviewImg.style.display='block'; mediaPreviewVideo.style.display='none';
+    } else {
+      mediaPreviewVideo.src = pendingMediaDataUrl; mediaPreviewVideo.style.display='block'; mediaPreviewImg.style.display='none';
+    }
+    mediaPreviewInfo.textContent = file.name;
+    mediaPreviewBar.classList.add('active');
+    sendBtn.disabled = false;
+  };
+  reader.readAsDataURL(file);
+});
+mediaPreviewClose.addEventListener('click', clearPendingMedia);
+function clearPendingMedia(){ pendingMediaFile=null; pendingMediaDataUrl=null; mediaPreviewBar.classList.remove('active'); mediaPreviewImg.src=''; mediaPreviewVideo.src=''; attachInput.value=''; sendBtn.disabled = !(textInput.value.trim().length > 0); }
+
+// ============ VOICE RECORDING ============
+const micBtn = $('#mic-btn');
+let audioContext = null;
+micBtn.addEventListener('click', async () => {
+  if(isRecording){ stopRecording(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target.result;
+        await sendMessage({ type: 'audio', url: base64 });
+        showToast('áudio enviado 🎙️');
+      };
+      reader.readAsDataURL(audioBlob);
+      stream.getTracks().forEach(track => track.stop());
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    recordingStartTime = Date.now();
+    micBtn.classList.add('recording');
+    micBtn.innerHTML = '<i class="ti ti-microphone"></i>';
+    showToast('gravando... clique novamente para parar');
+  } catch(err){ showToast('permissão de microfone necessária 🎙️'); console.error(err); }
 });
 
-textInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey){
-    e.preventDefault();
-    sendBtn.click();
+function stopRecording(){
+  if(mediaRecorder && isRecording){
+    mediaRecorder.stop();
+    isRecording = false;
+    micBtn.classList.remove('recording');
+    micBtn.innerHTML = '<i class="ti ti-microphone"></i>';
   }
-});
+}
 
-/* ============ EMOJI ============ */
+// ============ EMOJI ============
 const EMOJI_CATEGORIES = [
-  {
-    id: "carinhas", icon: "😂",
-    emojis: ["😀","😁","😂","🤣","😊","😍","🥰","😘","😜","🤪","😎","🥳","🤩","😇","🙃","😉","😏","😒","😢","😭","😡","🤬","😱","😴","🤔","🙄","😬","🥹","🤯","🫠","😮","😳","🥺","😤","🤫","🤭","😋","😛","🤤","🤗"]
-  },
-  {
-    id: "gestos", icon: "👍",
-    emojis: ["👍","👎","👏","🙏","🙌","👌","✌️","🤞","🤙","💪","🤝","👋","🫶","❤️","💚","💙","💛","🧡","💜","🖤","🤍","💕","💞","💖","✨","🔥","🎉","🎊","💯","⭐","👀","🫡","🤌","✋","🤚","👊","🫂"]
-  },
-  {
-    id: "animais", icon: "🐶",
-    emojis: ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦆","🦅","🦉","🐺","🐗","🐴","🦄","🐝","🦋","🐢","🐍","🐙","🐳","🐬","🐠","🦈","🐊","🐘","🦒","🦓","🐄","🐕"]
-  },
-  {
-    id: "comida", icon: "🍕",
-    emojis: ["🍕","🍔","🍟","🌮","🌭","🍿","🧀","🍗","🍖","🥩","🍳","🥞","🧇","🥐","🍞","🥖","🧁","🍰","🎂","🍩","🍪","🍫","🍬","🍭","🍦","🍨","🍧","🍉","🍓","🍇","🍌","🍎","🍊","🍍","🥭","☕","🍺","🍷","🥤","🧃"]
-  },
-  {
-    id: "atividades", icon: "⚽",
-    emojis: ["⚽","🏀","🏈","⚾","🎾","🏐","🏓","🏸","🥊","🎯","🎮","🎲","🎸","🎤","🎬","📷","🎨","🧩","🚗","✈️","🚀","🏖️","🏔️","🎆","🎄","🎁","🎈","🎀","🏆","🥇","🛒","💼","📱","💻","⏰","📅","💰","🛏️","🚿","🧹"]
-  }
+  { id:"carinhas", icon:"😂", emojis:["😀","😁","😂","🤣","😊","😍","🥰","😘","😜","🤪","😎","🥳","🤩","😇","🙃","😉","😏","😒","😢","😭","😡","🤬","😱","😴","🤔","🙄","😬","🥹","🤯","🫠","😮","😳","🥺","😤","🤫","🤭","😋","😛","🤤","🤗"] },
+  { id:"gestos", icon:"👍", emojis:["👍","👎","👏","🙏","🙌","👌","✌️","🤞","🤙","💪","🤝","👋","🫶","❤️","💚","💙","💛","🧡","💜","🖤","🤍","💕","💞","💖","✨","🔥","🎉","🎊","💯","⭐","👀","🫡","🤌","✋","🤚","👊","🫂"] },
+  { id:"animais", icon:"🐶", emojis:["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦆","🦅","🦉","🐺","🐗","🐴","🦄","🐝","🦋","🐢","🐍","🐙","🐳","🐬","🐠","🦈","🐊","🐘","🦒","🦓","🐄","🐕"] },
+  { id:"comida", icon:"🍕", emojis:["🍕","🍔","🍟","🌮","🌭","🍿","🧀","🍗","🍖","🥩","🍳","🥞","🧇","🥐","🍞","🥖","🧁","🍰","🎂","🍩","🍪","🍫","🍬","🍭","🍦","🍨","🍧","🍉","🍓","🍇","🍌","🍎","🍊","🍍","🥭","☕","🍺","🍷","🥤","🧃"] },
+  { id:"atividades", icon:"⚽", emojis:["⚽","🏀","🏈","⚾","🎾","🏐","🏓","🏸","🥊","🎯","🎮","🎲","🎸","🎤","🎬","📷","🎨","🧩","🚗","✈️","🚀","🏖️","🏔️","🎆","🎄","🎁","🎈","🎀","🏆","🥇","🛒","💼","📱","💻","⏰","📅","💰","🛏️","🚿","🧹"] }
 ];
-
-const emojiCategoryTabs = $('#emoji-category-tabs');
-const emojiGrid = $('#emoji-grid');
-let activeEmojiCategory = EMOJI_CATEGORIES[0].id;
-
+const emojiCategoryTabs=$('#emoji-category-tabs'); const emojiGrid=$('#emoji-grid'); let activeEmojiCategory=EMOJI_CATEGORIES[0].id;
 function renderEmojiTabs(){
-  emojiCategoryTabs.innerHTML = "";
-  EMOJI_CATEGORIES.forEach(cat => {
-    const tab = document.createElement('button');
-    tab.className = 'emoji-cat-tab' + (cat.id === activeEmojiCategory ? ' active' : '');
-    tab.textContent = cat.icon;
-    tab.addEventListener('click', () => {
-      activeEmojiCategory = cat.id;
-      renderEmojiTabs();
-      renderEmojiGrid();
-    });
+  emojiCategoryTabs.innerHTML="";
+  EMOJI_CATEGORIES.forEach(cat=>{
+    const tab=document.createElement('button'); tab.className='emoji-cat-tab'+(cat.id===activeEmojiCategory?' active':'');
+    tab.textContent=cat.icon; tab.addEventListener('click',()=>{ activeEmojiCategory=cat.id; renderEmojiTabs(); renderEmojiGrid(); });
     emojiCategoryTabs.appendChild(tab);
   });
 }
-
 function renderEmojiGrid(){
-  const cat = EMOJI_CATEGORIES.find(c => c.id === activeEmojiCategory);
-  emojiGrid.innerHTML = "";
-  cat.emojis.forEach(emoji => {
-    const btn = document.createElement('button');
-    btn.textContent = emoji;
-    btn.addEventListener('click', () => {
-      textInput.value += emoji;
-      textInput.dispatchEvent(new Event('input'));
-      textInput.focus();
-    });
-    emojiGrid.appendChild(btn);
-  });
+  const cat=EMOJI_CATEGORIES.find(c=>c.id===activeEmojiCategory); emojiGrid.innerHTML="";
+  cat.emojis.forEach(emoji=>{ const btn=document.createElement('button'); btn.textContent=emoji; btn.addEventListener('click',()=>{ textInput.value+=emoji; textInput.dispatchEvent(new Event('input')); textInput.focus(); }); emojiGrid.appendChild(btn); });
 }
+$('#emoji-btn').addEventListener('click',()=>{ renderEmojiTabs(); renderEmojiGrid(); $('#emoji-sheet-overlay').classList.add('active'); });
+$('#close-emoji-sheet').addEventListener('click',()=>$('#emoji-sheet-overlay').classList.remove('active'));
+$('#emoji-sheet-overlay').addEventListener('click',(e)=>{ if(e.target.id==='emoji-sheet-overlay')$('#emoji-sheet-overlay').classList.remove('active'); });
 
-$('#emoji-btn').addEventListener('click', () => {
-  renderEmojiTabs();
-  renderEmojiGrid();
-  $('#emoji-sheet-overlay').classList.add('active');
-});
-$('#close-emoji-sheet').addEventListener('click', () => $('#emoji-sheet-overlay').classList.remove('active'));
-$('#emoji-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'emoji-sheet-overlay') $('#emoji-sheet-overlay').classList.remove('active'); });
-
-/* ============ FIGURINHAS (STICKERS) ============ */
-const stickerGrid = $('#sticker-grid');
-const stickerCategories = $('#sticker-categories');
-let activeStickerCategory = Object.keys(STICKER_CATEGORIES)[0];
-
+// ============ STICKERS ============
+const stickerGrid=$('#sticker-grid'); const stickerCategories=$('#sticker-categories'); let activeStickerCategory=Object.keys(STICKER_CATEGORIES)[0];
 function renderStickerCategories(){
-  stickerCategories.innerHTML = "";
-  Object.keys(STICKER_CATEGORIES).forEach(catId => {
-    const cat = STICKER_CATEGORIES[catId];
-    const btn = document.createElement('button');
-    btn.className = 'sticker-cat-btn' + (catId === activeStickerCategory ? ' active' : '');
-    btn.textContent = cat.label;
-    btn.addEventListener('click', () => {
-      activeStickerCategory = catId;
-      renderStickerCategories();
-      renderStickerGrid();
-    });
+  stickerCategories.innerHTML="";
+  Object.keys(STICKER_CATEGORIES).forEach(catId=>{
+    const cat=STICKER_CATEGORIES[catId]; const btn=document.createElement('button');
+    btn.className='sticker-cat-btn'+(catId===activeStickerCategory?' active':'');
+    btn.textContent=cat.label; btn.addEventListener('click',()=>{ activeStickerCategory=catId; renderStickerCategories(); renderStickerGrid(); });
     stickerCategories.appendChild(btn);
   });
 }
-
 function renderStickerGrid(){
-  stickerGrid.innerHTML = "";
-  const cat = STICKER_CATEGORIES[activeStickerCategory];
-  if (!cat) return;
-  cat.stickers.forEach(st => {
-    const item = document.createElement('div');
-    item.className = 'sticker-item';
-    item.innerHTML = `<span class="sticker-emoji">${st.emoji}</span><span class="sticker-label">${st.label}</span>`;
-    item.addEventListener('click', async () => {
-      $('#sticker-sheet-overlay').classList.remove('active');
-      await sendMessage({ type: 'sticker', emoji: st.emoji, label: st.label });
-    });
+  stickerGrid.innerHTML=""; const cat=STICKER_CATEGORIES[activeStickerCategory]; if(!cat)return;
+  cat.stickers.forEach(st=>{
+    const item=document.createElement('div'); item.className='sticker-item';
+    item.innerHTML=`<span class="sticker-emoji">${st.emoji}</span><span class="sticker-label">${st.label}</span>`;
+    item.addEventListener('click', async ()=>{ $('#sticker-sheet-overlay').classList.remove('active'); await sendMessage({ type:'sticker', emoji:st.emoji, label:st.label }); });
     stickerGrid.appendChild(item);
   });
 }
+$('#sticker-btn').addEventListener('click',()=>{ renderStickerCategories(); renderStickerGrid(); $('#sticker-sheet-overlay').classList.add('active'); });
+$('#close-sticker-sheet').addEventListener('click',()=>$('#sticker-sheet-overlay').classList.remove('active'));
+$('#sticker-sheet-overlay').addEventListener('click',(e)=>{ if(e.target.id==='sticker-sheet-overlay')$('#sticker-sheet-overlay').classList.remove('active'); });
 
-$('#sticker-btn').addEventListener('click', () => {
-  renderStickerCategories();
-  renderStickerGrid();
-  $('#sticker-sheet-overlay').classList.add('active');
+// ============ GIF ============
+const gifSheetOverlay=$('#gif-sheet-overlay'); const gifSearch=$('#gif-search'); const gifResults=$('#gif-results'); const gifSheetTitle=$('#gif-sheet-title'); let gifSearchTimeout=null; let gifMode='gif';
+const GIF_MODE_LABELS={ gif:{title:"escolher um GIF", placeholder:"buscar GIF..."}, meme:{title:"escolher um meme", placeholder:"buscar meme..."} };
+$$('.gif-mode-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{ gifMode=tab.dataset.mode; $$('.gif-mode-tab').forEach(t=>t.classList.toggle('active',t===tab)); gifSheetTitle.textContent=GIF_MODE_LABELS[gifMode].title; gifSearch.placeholder=GIF_MODE_LABELS[gifMode].placeholder; gifSearch.value=""; gifResults.innerHTML='<p class="gif-hint">digite algo para buscar 🔍</p>'; if(gifMode==='meme')searchGifs('meme','meme'); });
 });
-$('#close-sticker-sheet').addEventListener('click', () => $('#sticker-sheet-overlay').classList.remove('active'));
-$('#sticker-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'sticker-sheet-overlay') $('#sticker-sheet-overlay').classList.remove('active'); });
-
-/* ============ GIF / MEME ============ */
-const gifSheetOverlay = $('#gif-sheet-overlay');
-const gifSearch = $('#gif-search');
-const gifResults = $('#gif-results');
-const gifSheetTitle = $('#gif-sheet-title');
-let gifSearchTimeout = null;
-let gifMode = 'gif';
-
-const GIF_MODE_LABELS = {
-  gif: { title: "escolher um GIF", placeholder: "buscar GIF (ex: bom dia, risada...)" },
-  meme: { title: "escolher um meme", placeholder: "buscar meme (ex: segunda-feira, cansado...)" }
-};
-
-$$('.gif-mode-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    gifMode = tab.dataset.mode;
-    $$('.gif-mode-tab').forEach(t => t.classList.toggle('active', t === tab));
-    gifSheetTitle.textContent = GIF_MODE_LABELS[gifMode].title;
-    gifSearch.placeholder = GIF_MODE_LABELS[gifMode].placeholder;
-    gifSearch.value = "";
-    gifResults.innerHTML = '<p class="gif-hint">digite algo para buscar 🔍</p>';
-    if (gifMode === 'meme') searchGifs('meme', 'meme');
-  });
+$('#gif-btn').addEventListener('click',()=>{ gifMode='gif'; $$('.gif-mode-tab').forEach(t=>t.classList.toggle('active',t.dataset.mode==='gif')); gifSheetTitle.textContent=GIF_MODE_LABELS.gif.title; gifSearch.placeholder=GIF_MODE_LABELS.gif.placeholder; gifSheetOverlay.classList.add('active'); gifSearch.value=""; gifResults.innerHTML='<p class="gif-hint">digite algo para buscar 🔍</p>'; setTimeout(()=>gifSearch.focus(),100); });
+$('#close-gif-sheet').addEventListener('click',()=>gifSheetOverlay.classList.remove('active'));
+gifSheetOverlay.addEventListener('click',(e)=>{ if(e.target===gifSheetOverlay)gifSheetOverlay.classList.remove('active'); });
+gifSearch.addEventListener('input',()=>{
+  clearTimeout(gifSearchTimeout); const term=gifSearch.value.trim();
+  if(!term){ if(gifMode==='meme'){ gifSearchTimeout=setTimeout(()=>searchGifs('meme','meme'),200); } else { gifResults.innerHTML='<p class="gif-hint">digite algo para buscar 🔍</p>'; } return; }
+  const finalTerm=gifMode==='meme'?`meme ${term}`:term; gifSearchTimeout=setTimeout(()=>searchGifs(finalTerm,gifMode),400);
 });
-
-$('#gif-btn').addEventListener('click', () => {
-  gifMode = 'gif';
-  $$('.gif-mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === 'gif'));
-  gifSheetTitle.textContent = GIF_MODE_LABELS.gif.title;
-  gifSearch.placeholder = GIF_MODE_LABELS.gif.placeholder;
-  gifSheetOverlay.classList.add('active');
-  gifSearch.value = "";
-  gifResults.innerHTML = '<p class="gif-hint">digite algo para buscar 🔍</p>';
-  setTimeout(() => gifSearch.focus(), 100);
-});
-$('#close-gif-sheet').addEventListener('click', () => gifSheetOverlay.classList.remove('active'));
-gifSheetOverlay.addEventListener('click', (e) => { if (e.target === gifSheetOverlay) gifSheetOverlay.classList.remove('active'); });
-
-gifSearch.addEventListener('input', () => {
-  clearTimeout(gifSearchTimeout);
-  const term = gifSearch.value.trim();
-  if (!term){
-    if (gifMode === 'meme'){
-      gifSearchTimeout = setTimeout(() => searchGifs('meme', 'meme'), 200);
-    } else {
-      gifResults.innerHTML = '<p class="gif-hint">digite algo para buscar 🔍</p>';
-    }
-    return;
-  }
-  const finalTerm = gifMode === 'meme' ? `meme ${term}` : term;
-  gifSearchTimeout = setTimeout(() => searchGifs(finalTerm, gifMode), 400);
-});
-
 async function searchGifs(term, sendType){
-  gifResults.innerHTML = '<p class="gif-hint">buscando...</p>';
+  gifResults.innerHTML='<p class="gif-hint">buscando...</p>';
   try {
-    const res = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(term)}&key=${TENOR_KEY}&client_key=familia_conecta&limit=16&locale=pt_BR`);
-    const data = await res.json();
-    gifResults.innerHTML = "";
-    if (!data.results || data.results.length === 0){
-      gifResults.innerHTML = '<p class="gif-hint">nada encontrado 😕</p>';
-      return;
-    }
-    data.results.forEach(gif => {
-      const img = document.createElement('img');
-      img.src = gif.media_formats.tinygif ? gif.media_formats.tinygif.url : gif.media_formats.gif.url;
-      img.loading = 'lazy';
-      img.addEventListener('click', async () => {
-        gifSheetOverlay.classList.remove('active');
-        const fullUrl = gif.media_formats.gif ? gif.media_formats.gif.url : img.src;
-        await sendMessage({ type: sendType === 'meme' ? 'meme' : 'gif', url: fullUrl });
-      });
+    const res=await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(term)}&key=${TENOR_KEY}&client_key=familia_conecta&limit=16&locale=pt_BR`);
+    const data=await res.json(); gifResults.innerHTML="";
+    if(!data.results||data.results.length===0){ gifResults.innerHTML='<p class="gif-hint">nada encontrado 😕</p>'; return; }
+    data.results.forEach(gif=>{
+      const img=document.createElement('img');
+      img.src=gif.media_formats.tinygif?gif.media_formats.tinygif.url:gif.media_formats.gif.url;
+      img.loading='lazy';
+      img.addEventListener('click', async ()=>{ gifSheetOverlay.classList.remove('active'); const fullUrl=gif.media_formats.gif?gif.media_formats.gif.url:img.src; await sendMessage({ type:sendType==='meme'?'meme':'gif', url:fullUrl }); });
       gifResults.appendChild(img);
     });
-  } catch(err){
-    console.error(err);
-    gifResults.innerHTML = '<p class="gif-hint">erro ao buscar 😕</p>';
-  }
+  } catch(err){ console.error(err); gifResults.innerHTML='<p class="gif-hint">erro ao buscar 😕</p>'; }
 }
 
-/* ============ SOUNDBOARD ============ */
-const soundSheetOverlay = $('#sound-sheet-overlay');
-const soundResults = $('#sound-results');
-
+// ============ SOUNDBOARD ============
+const soundSheetOverlay=$('#sound-sheet-overlay'); const soundResults=$('#sound-results');
 function renderSoundboard(){
-  soundResults.innerHTML = "";
-  SOUNDS.forEach(s => {
-    const btn = document.createElement('button');
-    btn.style = "padding:16px; border-radius:14px; border:1px solid var(--border); background:var(--bg); font-size:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px;";
-    btn.innerHTML = `<i class="ti ti-volume" style="font-size:22px; color:var(--teal);"></i><span>${s.label}</span>`;
-    btn.addEventListener('click', async () => {
-      playGeneratedSound(s.gen);
-      soundSheetOverlay.classList.remove('active');
-      await sendMessage({ type: 'sound', gen: s.gen, label: s.label });
-    });
+  soundResults.innerHTML="";
+  SOUNDS.forEach(s=>{
+    const btn=document.createElement('button');
+    btn.style="padding:16px; border-radius:14px; border:1px solid var(--border); background:var(--bg); font-size:14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px;";
+    btn.innerHTML=`<i class="ti ti-volume" style="font-size:22px; color:var(--teal);"></i><span>${s.label}</span>`;
+    btn.addEventListener('click', async ()=>{ playGeneratedSound(s.gen); soundSheetOverlay.classList.remove('active'); await sendMessage({ type:'sound', gen:s.gen, label:s.label }); });
     soundResults.appendChild(btn);
   });
 }
+$('#open-soundboard').addEventListener('click',()=>{ renderSoundboard(); soundSheetOverlay.classList.add('active'); });
+$('#close-sound-sheet').addEventListener('click',()=>soundSheetOverlay.classList.remove('active'));
+soundSheetOverlay.addEventListener('click',(e)=>{ if(e.target===soundSheetOverlay)soundSheetOverlay.classList.remove('active'); });
 
-$('#open-soundboard').addEventListener('click', () => {
-  renderSoundboard();
-  soundSheetOverlay.classList.add('active');
-});
-$('#close-sound-sheet').addEventListener('click', () => soundSheetOverlay.classList.remove('active'));
-soundSheetOverlay.addEventListener('click', (e) => { if (e.target === soundSheetOverlay) soundSheetOverlay.classList.remove('active'); });
-
-/* ============ PAPEL DE PAREDE ============ */
-const WALLPAPERS = [
-  { id: "padrao",  label: "padrão",  color: "#FFFBF6" },
-  { id: "creme",   label: "creme",   color: "#FBF3E7" },
-  { id: "menta",   label: "menta",   color: "#E1F5EE" },
-  { id: "ceu",     label: "céu",     color: "#E6F1FB" },
-  { id: "lilas",   label: "lilás",   color: "#EEEDFE" },
-  { id: "rosa",    label: "rosa",    color: "#FBEAF0" },
-  { id: "amarelo", label: "amarelo", color: "#FAEEDA" },
-  { id: "pessego", label: "pêssego", color: "#FAECE7" },
-  { id: "cinza",   label: "cinza claro", color: "#F1EFE8" },
-  { id: "escuro",  label: "escuro",  color: "#1C2540" },
-];
-
-function getSavedWallpaperId(){
-  try { return localStorage.getItem('familia_wallpaper') || 'padrao'; }
-  catch(e){ return 'padrao'; }
-}
-
-function applyWallpaper(id){
-  const wp = WALLPAPERS.find(w => w.id === id) || WALLPAPERS[0];
-  document.documentElement.style.setProperty('--bg-chat', wp.color);
-  try { localStorage.setItem('familia_wallpaper', wp.id); } catch(e){}
-}
-
+// ============ WALLPAPER ============
+const WALLPAPERS=[ {id:"padrao",label:"padrão",color:"#FFFBF6"},{id:"creme",label:"creme",color:"#FBF3E7"},{id:"menta",label:"menta",color:"#E1F5EE"},{id:"ceu",label:"céu",color:"#E6F1FB"},{id:"lilas",label:"lilás",color:"#EEEDFE"},{id:"rosa",label:"rosa",color:"#FBEAF0"},{id:"amarelo",label:"amarelo",color:"#FAEEDA"},{id:"pessego",label:"pêssego",color:"#FAECE7"},{id:"cinza",label:"cinza claro",color:"#F1EFE8"},{id:"escuro",label:"escuro",color:"#1C2540"} ];
+function getSavedWallpaperId(){ try{ return localStorage.getItem('familia_wallpaper')||'padrao'; }catch(e){return 'padrao';} }
+function applyWallpaper(id){ const wp=WALLPAPERS.find(w=>w.id===id)||WALLPAPERS[0]; document.documentElement.style.setProperty('--bg-chat', wp.color); try{ localStorage.setItem('familia_wallpaper', wp.id); }catch(e){} }
 function renderWallpaperGrid(){
-  const grid = $('#wallpaper-grid');
-  const current = getSavedWallpaperId();
-  grid.innerHTML = "";
-  WALLPAPERS.forEach(wp => {
-    const swatch = document.createElement('div');
-    swatch.className = 'wallpaper-swatch' + (wp.id === current ? ' active' : '');
-    swatch.style.background = wp.color;
-    swatch.title = wp.label;
-    swatch.addEventListener('click', () => {
-      applyWallpaper(wp.id);
-      renderWallpaperGrid();
-      showToast(`papel de parede: ${wp.label} 🎨`);
-    });
+  const grid=$('#wallpaper-grid'); const current=getSavedWallpaperId(); grid.innerHTML="";
+  WALLPAPERS.forEach(wp=>{
+    const swatch=document.createElement('div'); swatch.className='wallpaper-swatch'+(wp.id===current?' active':'');
+    swatch.style.background=wp.color; swatch.title=wp.label;
+    swatch.addEventListener('click',()=>{ applyWallpaper(wp.id); renderWallpaperGrid(); showToast(`papel de parede: ${wp.label} 🎨`); });
     grid.appendChild(swatch);
   });
 }
-
-$('#wallpaper-btn').addEventListener('click', () => {
-  renderWallpaperGrid();
-  $('#wallpaper-sheet-overlay').classList.add('active');
-});
-$('#close-wallpaper-sheet').addEventListener('click', () => $('#wallpaper-sheet-overlay').classList.remove('active'));
-$('#wallpaper-sheet-overlay').addEventListener('click', (e) => { if (e.target.id === 'wallpaper-sheet-overlay') $('#wallpaper-sheet-overlay').classList.remove('active'); });
-
+$('#wallpaper-btn').addEventListener('click',()=>{ renderWallpaperGrid(); $('#wallpaper-sheet-overlay').classList.add('active'); });
+$('#close-wallpaper-sheet').addEventListener('click',()=>$('#wallpaper-sheet-overlay').classList.remove('active'));
+$('#wallpaper-sheet-overlay').addEventListener('click',(e)=>{ if(e.target.id==='wallpaper-sheet-overlay')$('#wallpaper-sheet-overlay').classList.remove('active'); });
 applyWallpaper(getSavedWallpaperId());
 
-/* ============ SOUNDS ============ */
-let sharedAudioCtx = null;
-function getAudioCtx(){
-  if (!sharedAudioCtx){
-    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
-  return sharedAudioCtx;
-}
+// ============ SOUND GENERATORS ============
+let sharedAudioCtx=null;
+function getAudioCtx(){ if(!sharedAudioCtx)sharedAudioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(sharedAudioCtx.state==='suspended')sharedAudioCtx.resume(); return sharedAudioCtx; }
+function makeNoiseBuffer(ctx,duration){ const bufferSize=Math.floor(ctx.sampleRate*duration); const buffer=ctx.createBuffer(1,bufferSize,ctx.sampleRate); const data=buffer.getChannelData(0); for(let i=0;i<bufferSize;i++)data[i]=Math.random()*2-1; return buffer; }
+function tone(ctx,{freq,start,dur,type='sine',gain=0.3,slideTo=null}){ const osc=ctx.createOscillator(); const g=ctx.createGain(); osc.type=type; osc.frequency.setValueAtTime(freq,ctx.currentTime+start); if(slideTo!==null)osc.frequency.linearRampToValueAtTime(slideTo,ctx.currentTime+start+dur); g.gain.setValueAtTime(0,ctx.currentTime+start); g.gain.linearRampToValueAtTime(gain,ctx.currentTime+start+Math.min(0.02,dur/4)); g.gain.linearRampToValueAtTime(0,ctx.currentTime+start+dur); osc.connect(g); g.connect(ctx.destination); osc.start(ctx.currentTime+start); osc.stop(ctx.currentTime+start+dur+0.02); }
+function filteredNoise(ctx,{start,dur,freq=1000,q=1,gain=0.3,type='bandpass'}){ const noise=ctx.createBufferSource(); noise.buffer=makeNoiseBuffer(ctx,dur); const filter=ctx.createBiquadFilter(); filter.type=type; filter.frequency.value=freq; filter.Q.value=q; const g=ctx.createGain(); g.gain.setValueAtTime(0,ctx.currentTime+start); g.gain.linearRampToValueAtTime(gain,ctx.currentTime+start+0.02); g.gain.linearRampToValueAtTime(0,ctx.currentTime+start+dur); noise.connect(filter); filter.connect(g); g.connect(ctx.destination); noise.start(ctx.currentTime+start); noise.stop(ctx.currentTime+start+dur+0.02); }
+const SOUND_GENERATORS={ laugh(ctx){ [0,0.16,0.32,0.48].forEach((t,i)=>{ tone(ctx,{freq:380+i*12,start:t,dur:0.13,type:'triangle',gain:0.28,slideTo:280+i*12}); }); }, applause(ctx){ for(let i=0;i<14;i++){ filteredNoise(ctx,{start:Math.random()*0.9,dur:0.05+Math.random()*0.05,freq:2200+Math.random()*1500,q:0.7,gain:0.22}); } }, tada(ctx){ [261.6,329.6,392.0,523.3].forEach((f,i)=>{ tone(ctx,{freq:f,start:i*0.09,dur:0.22,type:'square',gain:0.18}); }); filteredNoise(ctx,{start:0.32,dur:0.4,freq:6000,q:0.5,gain:0.12,type:'highpass'}); }, dog(ctx){ [0,0.22].forEach(t=>{ tone(ctx,{freq:180,start:t,dur:0.12,type:'sawtooth',gain:0.3,slideTo:110}); filteredNoise(ctx,{start:t,dur:0.1,freq:600,q:1.2,gain:0.15}); }); }, cat(ctx){ tone(ctx,{freq:520,start:0,dur:0.35,type:'sawtooth',gain:0.22,slideTo:760}); tone(ctx,{freq:760,start:0.32,dur:0.25,type:'sawtooth',gain:0.18,slideTo:480}); }, bird(ctx){ [0,0.1,0.22,0.36].forEach((t,i)=>{ tone(ctx,{freq:2200+i*300,start:t,dur:0.07,type:'sine',gain:0.18,slideTo:3000+i*300}); }); }, rain(ctx){ filteredNoise(ctx,{start:0,dur:1.2,freq:3500,q:0.4,gain:0.1,type:'bandpass'}); for(let i=0;i<20;i++){ filteredNoise(ctx,{start:Math.random()*1.1,dur:0.04,freq:4000+Math.random()*2000,q:2,gain:0.06}); } }, honk(ctx){ tone(ctx,{freq:220,start:0,dur:0.45,type:'sawtooth',gain:0.28}); } };
+function playGeneratedSound(genId){ try{ const ctx=getAudioCtx(); const fn=SOUND_GENERATORS[genId]; if(fn)fn(ctx); }catch(e){ console.error(e); } }
 
-function makeNoiseBuffer(ctx, duration){
-  const bufferSize = Math.floor(ctx.sampleRate * duration);
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-  return buffer;
-}
+// ============ PWA ============
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 
-function tone(ctx, { freq, start, dur, type = 'sine', gain = 0.3, slideTo = null }){
-  const osc = ctx.createOscillator();
-  const g = ctx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
-  if (slideTo !== null){
-    osc.frequency.linearRampToValueAtTime(slideTo, ctx.currentTime + start + dur);
-  }
-  g.gain.setValueAtTime(0, ctx.currentTime + start);
-  g.gain.linearRampToValueAtTime(gain, ctx.currentTime + start + Math.min(0.02, dur / 4));
-  g.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur);
-  osc.connect(g);
-  g.connect(ctx.destination);
-  osc.start(ctx.currentTime + start);
-  osc.stop(ctx.currentTime + start + dur + 0.02);
-}
+// ============ INIT ============
+renderPersonGrid(); renderKeypad();
+setTimeout(() => { $('#loading-screen').style.display = 'none'; showScreen('#screen-login'); }, 600);
 
-function filteredNoise(ctx, { start, dur, freq = 1000, q = 1, gain = 0.3, type = 'bandpass' }){
-  const noise = ctx.createBufferSource();
-  noise.buffer = makeNoiseBuffer(ctx, dur);
-  const filter = ctx.createBiquadFilter();
-  filter.type = type;
-  filter.frequency.value = freq;
-  filter.Q.value = q;
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0, ctx.currentTime + start);
-  g.gain.linearRampToValueAtTime(gain, ctx.currentTime + start + 0.02);
-  g.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur);
-  noise.connect(filter);
-  filter.connect(g);
-  g.connect(ctx.destination);
-  noise.start(ctx.currentTime + start);
-  noise.stop(ctx.currentTime + start + dur + 0.02);
-}
-
-const SOUND_GENERATORS = {
-  laugh(ctx){
-    [0, 0.16, 0.32, 0.48].forEach((t, i) => {
-      tone(ctx, { freq: 380 + i * 12, start: t, dur: 0.13, type: 'triangle', gain: 0.28, slideTo: 280 + i * 12 });
-    });
-  },
-  applause(ctx){
-    for (let i = 0; i < 14; i++){
-      filteredNoise(ctx, { start: Math.random() * 0.9, dur: 0.05 + Math.random() * 0.05, freq: 2200 + Math.random() * 1500, q: 0.7, gain: 0.22 });
-    }
-  },
-  tada(ctx){
-    [261.6, 329.6, 392.0, 523.3].forEach((f, i) => {
-      tone(ctx, { freq: f, start: i * 0.09, dur: 0.22, type: 'square', gain: 0.18 });
-    });
-    filteredNoise(ctx, { start: 0.32, dur: 0.4, freq: 6000, q: 0.5, gain: 0.12, type: 'highpass' });
-  },
-  dog(ctx){
-    [0, 0.22].forEach(t => {
-      tone(ctx, { freq: 180, start: t, dur: 0.12, type: 'sawtooth', gain: 0.3, slideTo: 110 });
-      filteredNoise(ctx, { start: t, dur: 0.1, freq: 600, q: 1.2, gain: 0.15 });
-    });
-  },
-  cat(ctx){
-    tone(ctx, { freq: 520, start: 0, dur: 0.35, type: 'sawtooth', gain: 0.22, slideTo: 760 });
-    tone(ctx, { freq: 760, start: 0.32, dur: 0.25, type: 'sawtooth', gain: 0.18, slideTo: 480 });
-  },
-  bird(ctx){
-    [0, 0.1, 0.22, 0.36].forEach((t, i) => {
-      tone(ctx, { freq: 2200 + i * 300, start: t, dur: 0.07, type: 'sine', gain: 0.18, slideTo: 3000 + i * 300 });
-    });
-  },
-  rain(ctx){
-    filteredNoise(ctx, { start: 0, dur: 1.2, freq: 3500, q: 0.4, gain: 0.1, type: 'bandpass' });
-    for (let i = 0; i < 20; i++){
-      filteredNoise(ctx, { start: Math.random() * 1.1, dur: 0.04, freq: 4000 + Math.random() * 2000, q: 2, gain: 0.06 });
-    }
-  },
-  honk(ctx){
-    tone(ctx, { freq: 220, start: 0, dur: 0.45, type: 'sawtooth', gain: 0.28 });
-  }
-};
-
-function playGeneratedSound(genId){
-  try {
-    const ctx = getAudioCtx();
-    const fn = SOUND_GENERATORS[genId];
-    if (fn) fn(ctx);
-  } catch(e){ console.error(e); }
-}
-
-/* ============ PWA ============ */
-if ('serviceWorker' in navigator){
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
-}
-
-/* ============ INIT ============ */
-renderPersonGrid();
-renderKeypad();
-setTimeout(() => {
-  $('#loading-screen').style.display = 'none';
-  showScreen('#screen-login');
-}, 600);
-
+// Apply theme on load
+setTheme(getTheme());
 </script>
-
 </body>
 </html>
