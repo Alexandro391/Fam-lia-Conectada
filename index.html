@@ -1002,8 +1002,70 @@ body { display: flex; justify-content: center; }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* Scrollbar hidden */
-::-webkit-scrollbar { width: 0; height: 0; }
+/* Timestamp inline dentro da bolha */
+.msg-time-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--text-3);
+  float: right;
+  margin-left: 6px;
+  margin-top: 2px;
+  margin-bottom: -2px;
+  line-height: 1.2;
+  white-space: nowrap;
+  clear: both;
+}
+.msg-row.mine .msg-time-inline { color: rgba(17,27,33,0.5); }
+[data-theme="dark"] .msg-row.mine .msg-time-inline { color: rgba(233,237,239,0.5); }
+
+/* Empurra o texto para criar espaço para o timestamp */
+.msg-bubble:not(.sticker-bubble):not(.audio-bubble):not(.sound-bubble) {
+  padding-bottom: 4px;
+}
+
+/* Cauda desaparece em mensagens consecutivas do mesmo remetente */
+.msg-row + .msg-row:not(.mine) .msg-bubble::before { display: none; }
+.msg-row.mine + .msg-row.mine .msg-bubble::before { display: none; }
+/* Também menos espaço entre bolhas consecutivas */
+.msg-row + .msg-row:not(.mine),
+.msg-row.mine + .msg-row.mine {
+  margin-top: -4px;
+}
+/* E oculta o nome do autor em consecutivas (já era feito no avatar, reforça no author) */
+.msg-row + .msg-row:not(.mine) .msg-author { display: none; }
+
+/* Bolha de digitando */
+.typing-bubble {
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px !important;
+  min-width: 56px;
+}
+.typing-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-3);
+  animation: typingBounce 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Animação do coração no double tap */
+@keyframes heartPop {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+  50% { opacity: 1; transform: translate(-50%, -70%) scale(1.3); }
+  100% { opacity: 0; transform: translate(-50%, -90%) scale(1); }
+}
+
+/* Swipe reply indicator */
+.msg-bubble { transition: transform 0.05s; }
+
 
 /* GIF search input display fix */
 #gif-search { display: block; }
@@ -1406,8 +1468,7 @@ function listenTypingStatus(){
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
       const id = docSnap.id;
-      if(id === currentUser?.id) return; // ignora o próprio usuário
-      // Considera online se lastSeen nos últimos 30s
+      if(id === currentUser?.id) return;
       const lastSeen = data.lastSeen?.toDate?.() || null;
       const isRecent = lastSeen && (Date.now() - lastSeen.getTime()) < 30000;
       if(data.online && isRecent){
@@ -1425,15 +1486,43 @@ function listenTypingStatus(){
 
     // Atualizar online-strip
     const strip = $('#online-strip');
-    if(!strip) return;
+    if(strip){
+      if(typingIds.length > 0){
+        const names = typingIds.map(id => getPersonName(id));
+        strip.innerHTML = `<span style="color:#F59E0B;font-size:11px;">●</span> ${names.join(', ')} ${names.length > 1 ? 'estão' : 'está'} digitando...`;
+      } else if(onlineIds.length > 0){
+        const names = onlineIds.map(id => getPersonName(id));
+        strip.innerHTML = `<span class="online-dot"></span> ${names.join(', ')} online`;
+      } else {
+        strip.innerHTML = '';
+      }
+    }
+
+    // Bolha de digitando no feed de mensagens
+    const container = $('#messages-container');
+    if(!container) return;
+    let typingBubble = container.querySelector('#typing-bubble-row');
     if(typingIds.length > 0){
       const names = typingIds.map(id => getPersonName(id));
-      strip.innerHTML = `<span style="color:#F59E0B;font-size:11px;">●</span> ${names.join(', ')} ${names.length > 1 ? 'estão' : 'está'} digitando...`;
-    } else if(onlineIds.length > 0){
-      const names = onlineIds.map(id => getPersonName(id));
-      strip.innerHTML = `<span class="online-dot"></span> ${names.join(', ')} online`;
-    } else {
-      strip.innerHTML = '';
+      const emojis = typingIds.map(id => getPersonEmoji(id));
+      const colors = typingIds.map(id => getPersonColor(id));
+      if(!typingBubble){
+        typingBubble = document.createElement('div');
+        typingBubble.id = 'typing-bubble-row';
+        typingBubble.className = 'msg-row';
+        container.appendChild(typingBubble);
+      }
+      typingBubble.innerHTML = `
+        <div class="msg-avatar" style="background:${colors[0]}22;">${emojis[0]}</div>
+        <div class="msg-stack">
+          <p class="msg-author" style="color:${colors[0]};">${names.join(', ')}</p>
+          <div class="msg-bubble typing-bubble">
+            <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+          </div>
+        </div>`;
+      typingBubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } else if(typingBubble){
+      typingBubble.remove();
     }
   });
 }
@@ -1532,18 +1621,13 @@ function listenToMessages(){
           const existingBubble = container.querySelector(`[data-msg-id="${msgId}"]`);
           if (!existingBubble) return;
           const newEl = renderMessage(msgId, msg, d);
-          // Atualiza só o conteúdo da bolha (texto, edição)
+          // Atualiza só o conteúdo da bolha (texto, edição) preservando o time-inline
           const newBubble = newEl.querySelector('.msg-bubble');
           if (newBubble) existingBubble.innerHTML = newBubble.innerHTML;
           // Atualiza barra de reações
           const reactBar = document.querySelector(`#reactions-${msgId}`);
           const newReactBar = newEl.querySelector('.reactions-bar');
           if (reactBar && newReactBar) reactBar.innerHTML = newReactBar.innerHTML;
-          // Atualiza horário / status de leitura
-          const row = existingBubble.closest('.msg-row');
-          const timeEl = row?.querySelector('.msg-time');
-          const newTimeEl = newEl.querySelector('.msg-time');
-          if (timeEl && newTimeEl) timeEl.innerHTML = newTimeEl.innerHTML;
 
         } else if (change.type === 'removed') {
           const existingBubble = container.querySelector(`[data-msg-id="${msgId}"]`);
@@ -1619,36 +1703,53 @@ function renderMessage(msgId, msg, date){
   const avatarHtml = isMine ? "" : `<div class="msg-avatar" style="background:${authorColor}22;" title="${authorName}">${authorEmoji}</div>`;
   const authorHtml = isMine ? "" : `<p class="msg-author" style="color:${authorColor};">${escapeHtml(authorName)}</p>`;
 
+  // Timestamp inline dentro da bolha
+  const timeInBubble = `<span class="msg-time-inline">${timeStr}<span class="msg-countdown" id="cd-${msgId}"></span>${statusIcon ? ' ' + statusIcon : ''}</span>`;
+
+  // Para stickers, o timestamp fica fora (abaixo)
+  const isSticker = msg.type === 'sticker';
+
   row.innerHTML = `
     ${avatarHtml}
     <div class="msg-stack">
       ${authorHtml}
-      <div class="${bubbleClass}" data-msg-id="${msgId}">${bubbleInner}</div>
+      <div class="${bubbleClass}" data-msg-id="${msgId}">${isSticker ? bubbleInner : bubbleInner + timeInBubble}</div>
       <div class="reactions-bar" id="reactions-${msgId}"></div>
-      <p class="msg-time">${timeStr} <span class="msg-countdown" id="cd-${msgId}"></span><span class="status-icon">${statusIcon}</span></p>
+      ${isSticker ? `<p class="msg-time">${timeStr} <span class="msg-countdown" id="cd-${msgId}"></span><span class="status-icon">${statusIcon}</span></p>` : ''}
     </div>
   `;
 
-  // Auto-delete countdown (1 minuto = 60s)
-  const AUTO_DELETE_MS = 60 * 1000;
+  // Auto-delete countdown (24 horas)
+  const AUTO_DELETE_MS = 24 * 60 * 60 * 1000;
   const msgAge = Date.now() - date.getTime();
   const remaining = AUTO_DELETE_MS - msgAge;
   if (remaining > 0) {
     const cdEl = row.querySelector(`#cd-${msgId}`);
-    let secsLeft = Math.ceil(remaining / 1000);
-    const tick = () => {
+    const updateCountdown = () => {
       if (!cdEl || !cdEl.isConnected) return;
-      if (secsLeft <= 0) {
+      const msLeft = AUTO_DELETE_MS - (Date.now() - date.getTime());
+      if (msLeft <= 0) {
         row.classList.add('deleting');
         setTimeout(() => deleteMessage(msgId), 420);
         return;
       }
-      cdEl.textContent = `⏱ ${secsLeft}s`;
-      cdEl.classList.toggle('urgent', secsLeft <= 10);
-      secsLeft--;
-      setTimeout(tick, 1000);
+      const hoursLeft = Math.floor(msLeft / (60 * 60 * 1000));
+      const minsLeft = Math.floor((msLeft % (60 * 60 * 1000)) / 60000);
+      if (hoursLeft > 1) {
+        cdEl.textContent = `⏱ ${hoursLeft}h`;
+        cdEl.classList.remove('urgent');
+        setTimeout(updateCountdown, 60000); // atualiza a cada 1min quando >1h
+      } else if (hoursLeft === 1 || minsLeft > 10) {
+        cdEl.textContent = `⏱ ${hoursLeft > 0 ? hoursLeft + 'h' : ''}${minsLeft}m`;
+        cdEl.classList.remove('urgent');
+        setTimeout(updateCountdown, 60000);
+      } else {
+        cdEl.textContent = `⏱ ${minsLeft}m`;
+        cdEl.classList.toggle('urgent', minsLeft <= 5);
+        setTimeout(updateCountdown, 30000);
+      }
     };
-    tick();
+    updateCountdown();
   } else {
     // Mensagem já deveria ter sido excluída — remove imediatamente
     setTimeout(() => deleteMessage(msgId), 50);
@@ -1696,9 +1797,63 @@ function renderMessage(msgId, msg, date){
 
   let pressTimer = null;
   const openPopover = () => openReactionPopover(bubbleEl, msgId, msg, isMine);
-  bubbleEl.addEventListener('touchstart', () => { pressTimer = setTimeout(openPopover, 380); });
+  
+  // Double tap → ❤️ rápido
+  let lastTap = 0;
+  bubbleEl.addEventListener('touchstart', (e) => {
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      clearTimeout(pressTimer);
+      e.preventDefault();
+      toggleReaction(msgId, '❤️');
+      // Animação de coração
+      const heart = document.createElement('span');
+      heart.textContent = '❤️';
+      heart.style.cssText = 'position:absolute;font-size:32px;pointer-events:none;animation:heartPop 0.6s ease forwards;z-index:50;left:50%;top:50%;transform:translate(-50%,-50%);';
+      bubbleEl.style.position = 'relative';
+      bubbleEl.appendChild(heart);
+      setTimeout(() => heart.remove(), 600);
+      lastTap = 0;
+      return;
+    }
+    lastTap = now;
+    pressTimer = setTimeout(openPopover, 380);
+  });
   bubbleEl.addEventListener('touchend', () => clearTimeout(pressTimer));
+  bubbleEl.addEventListener('touchmove', () => clearTimeout(pressTimer));
   bubbleEl.addEventListener('dblclick', openPopover);
+
+  // Swipe para responder (arrastar direita)
+  let swipeStartX = null; let swipeStartY = null; let swipeDelta = 0;
+  const SWIPE_THRESHOLD = 60;
+  row.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.msg-bubble') && e.touches.length === 1) {
+      swipeStartX = e.touches[0].clientX;
+      swipeStartY = e.touches[0].clientY;
+      swipeDelta = 0;
+    }
+  }, { passive: true });
+  row.addEventListener('touchmove', (e) => {
+    if (swipeStartX === null) return;
+    const dx = e.touches[0].clientX - swipeStartX;
+    const dy = Math.abs(e.touches[0].clientY - swipeStartY);
+    if (dy > 20) { swipeStartX = null; return; } // scroll vertical — ignora
+    if (dx > 0 && dx < SWIPE_THRESHOLD + 20) {
+      swipeDelta = dx;
+      bubbleEl.style.transition = 'transform 0.05s';
+      bubbleEl.style.transform = `translateX(${Math.min(dx * 0.5, 30)}px)`;
+    }
+  }, { passive: true });
+  row.addEventListener('touchend', () => {
+    if (swipeStartX !== null && swipeDelta >= SWIPE_THRESHOLD) {
+      setReplyTo(msgId, msg);
+      // Feedback haptico leve
+      if (navigator.vibrate) navigator.vibrate(30);
+    }
+    bubbleEl.style.transition = 'transform 0.2s ease';
+    bubbleEl.style.transform = '';
+    swipeStartX = null; swipeDelta = 0;
+  });
 
   renderReactions(row.querySelector(`#reactions-${msgId}`), msg.reactions || {}, msgId);
 
