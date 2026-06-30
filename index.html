@@ -1429,7 +1429,36 @@ function checkPin(){ if(pinBuffer===selectedPersonForPin.pin){ const emoji=getPe
 $('#back-link').addEventListener('click',()=>{ $('#pin-section').classList.remove('active'); $('#person-grid').style.display='grid'; selectedPersonForPin=null; pinBuffer=""; });
 
 // ============ CHAT ============
-function enterChat(){ showScreen('#screen-chat'); renderHeaderAvatars(); listenToMessages(); updateStatus(true); setInterval(()=>updateStatus(true), 10000); }
+function enterChat(){ showScreen('#screen-chat'); renderHeaderAvatars(); listenToMessages(); updateStatus(true); setInterval(()=>updateStatus(true), 10000); requestNotificationPermission(); }
+
+async function requestNotificationPermission(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'default'){
+    // Pequeno delay para não aparecer junto com o carregamento
+    setTimeout(async () => {
+      const result = await Notification.requestPermission();
+      if(result === 'granted') showToast('🔔 notificações ativadas!');
+    }, 1500);
+  }
+}
+
+function fireNotification(authorName, authorEmoji, text){
+  if(!('Notification' in window)) return;
+  if(Notification.permission !== 'granted') return;
+  // Só notifica se o app estiver em segundo plano
+  if(document.visibilityState === 'visible') return;
+  try{
+    const n = new Notification(`${authorEmoji} ${authorName}`, {
+      body: text,
+      icon: 'icon-192.png',
+      badge: 'icon-192.png',
+      tag: 'familia-conecta-msg',  // agrupa notificações (evita flood)
+      renotify: true,
+      silent: false,
+    });
+    n.onclick = () => { window.focus(); n.close(); };
+  }catch(e){}
+}
 function renderHeaderAvatars(){
   const wrap=$('#header-avatars'); wrap.innerHTML="";
   FAMILY_BASE.forEach(p=>{
@@ -1616,6 +1645,25 @@ function listenToMessages(){
           requestAnimationFrame(() => {
             el.scrollIntoView({ behavior: 'smooth', block: 'end' });
           });
+          // Notificação: só para mensagens de outros, recentes (últimos 15s)
+          if(currentUser && msg.authorId !== currentUser.id){
+            const ageMs = Date.now() - d.getTime();
+            if(ageMs < 15000){
+              const aName = getPersonName(msg.authorId);
+              const aEmoji = getPersonEmoji(msg.authorId);
+              let notifText = '';
+              if(msg.type === 'text') notifText = msg.text || '';
+              else if(msg.type === 'photo') notifText = '📷 foto';
+              else if(msg.type === 'video') notifText = '🎥 vídeo';
+              else if(msg.type === 'audio') notifText = '🎤 áudio';
+              else if(msg.type === 'sticker') notifText = `sticker ${msg.emoji||''}`;
+              else if(msg.type === 'gif') notifText = '🎞 GIF';
+              else if(msg.type === 'meme') notifText = '😂 meme';
+              else if(msg.type === 'sound') notifText = `🔊 ${msg.label||'som'}`;
+              else notifText = 'nova mensagem';
+              fireNotification(aName, aEmoji, notifText);
+            }
+          }
 
         } else if (change.type === 'modified') {
           const existingBubble = container.querySelector(`[data-msg-id="${msgId}"]`);
